@@ -60,7 +60,7 @@ async function loadDocuments() {
   );
 }
 
-async function listDataFiles(dir, baseDir = dir) {
+async function listDataFiles(dir = dataDir, baseDir = dir) {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
   const files = await Promise.all(
     entries.map(async (entry) => {
@@ -133,6 +133,7 @@ async function loadFileContent(filePath, relativePath) {
 
 module.exports = {
   dataDir,
+  listDataFiles,
   listDataFolders,
   loadKnowledgeBase,
   supportedExtensions,
