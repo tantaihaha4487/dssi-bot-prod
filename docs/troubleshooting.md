@@ -2,7 +2,7 @@
 
 [Back to docs index](README.md) | [Back to project README](../README.md)
 
-Use this page when setup, deploy, indexing, or `/ask` fails.
+Use this page when setup, deploy, indexing, or mention-based questions fail.
 
 Related pages: [Setup Guide](setup.md), [Configuration Guide](configuration.md), [Knowledge Files](knowledge-files.md), [Operations Guide](operations.md), [Provider Guide](providers.md).
 
@@ -55,6 +55,18 @@ discord:
 ```
 
 Run `/reload` after editing `config.yaml`, or restart if reload is not currently available to you.
+
+## Mentions Get No Feedback
+
+Check the bot role and channel overrides for the target text channel. The bot needs:
+
+- `View Channel`
+- `Send Messages`
+- `Read Message History`
+
+In restricted channels, move the bot role high enough or add an explicit channel permission override. Without `Read Message History`, Discord rejects reply messages with `Cannot reply without permission to read message history`; the bot falls back to plain channel sends when possible.
+
+Also confirm Message Content Intent is enabled in the Discord Developer Portal and restart or rebuild the bot after code changes.
 
 ## No Chat Provider Is Configured
 

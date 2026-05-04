@@ -2,7 +2,7 @@
 
 [Back to docs index](README.md) | [Back to project README](../README.md)
 
-Knowledge files are the local source material used by `/ask`.
+Knowledge files are the local source material used for mention-based questions.
 
 Related pages: [Setup Guide](setup.md), [Configuration Guide](configuration.md), [Operations Guide](operations.md), [Architecture](architecture.md).
 

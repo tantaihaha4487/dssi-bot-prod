@@ -6,10 +6,10 @@ This directory is the detailed guide for running, configuring, and operating the
 
 ## Start Here
 
-- [Setup Guide](setup.md) covers first install, credentials, slash command deploys, and run modes.
+- [Setup Guide](setup.md) covers first install, credentials, slash command deploys, mention setup, and run modes.
 - [Configuration Guide](configuration.md) explains `config.yaml`, `.env`, admin access, reloads, embeddings, Qdrant, and retrieval settings.
 - [Knowledge Files](knowledge-files.md) explains supported files, folder layout, uploads, indexing, and image text extraction.
-- [Operations Guide](operations.md) covers slash commands, Docker Compose, local runs, refreshes, reloads, and maintenance tasks.
+- [Operations Guide](operations.md) covers mention-based questions, slash commands, Docker Compose, local runs, refreshes, reloads, and maintenance tasks.
 - [Provider Guide](providers.md) explains built-in OpenAI-compatible providers, fallback order, credentials, and custom providers.
 - [Architecture](architecture.md) explains the command layer, RAG pipeline, retrieval strategy, vector store, and data flow.
 - [Troubleshooting](troubleshooting.md) lists common setup and runtime failures with fixes.

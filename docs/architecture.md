@@ -95,7 +95,7 @@ Enable `retrieval.debug: true` to inspect mode, scores, sources, and chunk index
 
 `src/rag/llm.js` builds chat and embedding clients from config.
 
-`src/rag/service.js` ties retrieval and answer generation together. It sends retrieved context to the configured chat provider and returns the answer plus source list to `/ask`.
+`src/rag/service.js` ties retrieval and answer generation together. It sends retrieved context to the configured chat provider and returns the answer plus source list to the mention handler.
 
 ## Runtime Config
 

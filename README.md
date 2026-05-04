@@ -1,6 +1,6 @@
 # Discord Vector RAG Bot
 
-Discord.js v14 bot with a `/ask` slash command backed by local knowledge files, image text extraction, keyword routing, Ollama local embeddings, Qdrant vector search, and configurable OpenAI-compatible chat providers.
+Discord.js v14 bot that answers questions when mentioned, backed by local knowledge files, image text extraction, keyword routing, Ollama local embeddings, Qdrant vector search, and configurable OpenAI-compatible chat providers.
 
 Detailed documentation lives in [`docs/`](docs/README.md): [setup](docs/setup.md), [configuration](docs/configuration.md), [knowledge files](docs/knowledge-files.md), [operations](docs/operations.md), [providers](docs/providers.md), [architecture](docs/architecture.md), and [troubleshooting](docs/troubleshooting.md).
 
@@ -19,7 +19,7 @@ Detailed documentation lives in [`docs/`](docs/README.md): [setup](docs/setup.md
 ## Features
 
 - Slash command loader from the original Discord.js template
-- `/ask` command for questions against local knowledge files
+- Mention-based questions against local knowledge files, for example `@bot what's DSSI`
 - `/upload` command for adding `.txt`, `.pdf`, or image files from Discord
 - `/refresh` command for rebuilding the Qdrant index without restarting
 - `/reload` command for reloading `config.yaml` without restarting
@@ -121,7 +121,11 @@ discord:
     - "YOUR_MODERATOR_ROLE_ID"
 ```
 
-`/ask` and `/ping` are public. `/upload`, `/refresh`, and `/reload` only work for users listed in `discord.adminUserIds` or members with a role listed in `discord.moderatorRoleIds`.
+Mention-based questions and `/ping` are public. `/upload`, `/refresh`, and `/reload` only work for users listed in `discord.adminUserIds` or members with a role listed in `discord.moderatorRoleIds`.
+
+The bot needs the Message Content Intent enabled in the Discord Developer Portal so it can read questions after mentions.
+
+In restricted channels, place the bot role high enough and allow `View Channel`, `Send Messages`, and `Read Message History`. Without `Read Message History`, Discord rejects normal reply messages; the bot falls back to plain channel sends when possible.
 
 If both access lists are empty, `/upload`, `/refresh`, and `/reload` are denied for everyone. Discord IDs must be quoted strings because they are larger than JavaScript's safe integer range.
 
@@ -409,18 +413,18 @@ npm start
 
 ## Use The Bot
 
-Run this command in Discord:
+Mention the bot with a question in Discord:
 
 ```text
-/ask question: What is this program about?
+@bot What is this program about?
 ```
 
 Examples:
 
 ```text
-/ask question: 2569 admission requirement คืออะไร
-/ask question: ค่าเทอม 2568 เท่าไหร่
-/ask question: Data Science and Software Innovation เรียนเกี่ยวกับอะไร
+@bot 2569 admission requirement คืออะไร
+@bot ค่าเทอม 2568 เท่าไหร่
+@bot Data Science and Software Innovation เรียนเกี่ยวกับอะไร
 ```
 
 On startup, the bot loads files from `data/` and its subfolders, chunks them, clears its own `qdrant.indexId` points from Qdrant, and indexes the current chunks before searching.
@@ -476,7 +480,7 @@ Custom OpenAI-compatible endpoints also work by adding a provider name to `chat.
 data/                      Local RAG knowledge files, scanned recursively
 .cache/image-text/         Cached text extracted from image knowledge files
 config.yaml                Non-secret app, provider, retrieval, and admin config
-src/commands/ask.js        Discord slash command for RAG
+src/events/messageCreate/  Mention-based RAG question handler
 src/rag/                   RAG loading, Qdrant retrieval, LLM, and answer flow
 src/events/                Discord event handlers
 src/utils/                 Command/event loader and deploy script

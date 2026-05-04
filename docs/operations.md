@@ -6,11 +6,20 @@ This page covers day-to-day command usage and maintenance.
 
 Related pages: [Setup Guide](setup.md), [Knowledge Files](knowledge-files.md), [Configuration Guide](configuration.md), [Troubleshooting](troubleshooting.md).
 
+## Asking Questions
+
+Mention the bot to ask the knowledge base:
+
+```text
+@bot What is this program about?
+```
+
+The bot replies with an answer and source filenames when available.
+
 ## Slash Commands
 
 Public commands:
 
-- `/ask question:<text>` asks the knowledge base.
 - `/ping` checks whether the bot responds.
 
 Admin commands:
@@ -25,7 +34,7 @@ Admin commands require `discord.adminUserIds` or `discord.moderatorRoleIds` in `
 
 1. Add or upload knowledge files.
 2. Run `/refresh` if files changed outside `/upload`.
-3. Ask with `/ask`.
+3. Ask by mentioning the bot.
 4. Edit `config.yaml` when tuning providers or retrieval.
 5. Run `/reload`.
 6. Run `/refresh` if the config change affects indexing.
@@ -33,13 +42,11 @@ Admin commands require `discord.adminUserIds` or `discord.moderatorRoleIds` in `
 ## Ask Examples
 
 ```text
-/ask question: What is this program about?
-/ask question: 2569 admission requirement คืออะไร
-/ask question: ค่าเทอม 2568 เท่าไหร่
-/ask question: Data Science and Software Innovation เรียนเกี่ยวกับอะไร
+@bot What is this program about?
+@bot 2569 admission requirement คืออะไร
+@bot ค่าเทอม 2568 เท่าไหร่
+@bot Data Science and Software Innovation เรียนเกี่ยวกับอะไร
 ```
-
-The bot replies with an answer and source filenames when available.
 
 ## Refresh Rules
 

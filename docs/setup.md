@@ -51,7 +51,11 @@ discord:
 
 Keep Discord IDs quoted. Discord snowflake IDs are larger than JavaScript's safe integer range.
 
-`/ask` and `/ping` are public. `/upload`, `/refresh`, and `/reload` require `discord.adminUserIds` or `discord.moderatorRoleIds`.
+Mention-based questions and `/ping` are public. `/upload`, `/refresh`, and `/reload` require `discord.adminUserIds` or `discord.moderatorRoleIds`.
+
+Enable Message Content Intent for the bot in the Discord Developer Portal so mentions like `@bot what's DSSI` include the question text.
+
+For restricted channels, make sure the bot role is high enough and has `View Channel`, `Send Messages`, and `Read Message History`. `Read Message History` is required for Discord reply messages.
 
 ## Add Knowledge Files
 

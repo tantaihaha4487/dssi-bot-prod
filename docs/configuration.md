@@ -28,7 +28,7 @@ discord:
 
 Access behavior:
 
-- `/ask` and `/ping` are public.
+- Mention-based questions and `/ping` are public.
 - `/upload`, `/refresh`, and `/reload` require an admin user ID or moderator role ID.
 - Empty admin and moderator lists deny all admin commands.
 - IDs should be quoted strings.

@@ -1,58 +1,25 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
 const { EmbedBuilder } = require("discord.js");
 const { askKnowledgeBase } = require("../rag/service");
 
 const MESSAGE_CHUNK_LENGTH = 3000;
 const MISINFORMATION_NOTICE = "AI might contain misinformation.";
 
-module.exports = {
-  data: new SlashCommandBuilder()
-    .setName("ask")
-    .setDescription("Ask a question using the local RAG knowledge base")
-    .addStringOption((option) =>
-      option
-        .setName("question")
-        .setDescription("The question to answer")
-        .setRequired(true),
-    ),
+async function getAskResponseEmbeds(question) {
+  const result = await askKnowledgeBase(question);
+  const response = formatResponse(result);
 
-  async execute(interaction) {
-    const question = interaction.options.getString("question", true);
+  return chunkMessage(response, MESSAGE_CHUNK_LENGTH).map(createResponseEmbed);
+}
 
-    await interaction.deferReply();
-
-    try {
-      const result = await askKnowledgeBase(question);
-      const response = formatResponse(result);
-
-      await sendChunkedResponse(interaction, response);
-    } catch (error) {
-      console.error("Error answering RAG question:", error);
-
-      await interaction.editReply({
-        embeds: [
-          createResponseEmbed(getUserFacingError(error)).setTitle("Ask Failed"),
-        ],
-      });
-    }
-  },
-};
+function createAskErrorEmbed(error) {
+  return createResponseEmbed(getUserFacingError(error)).setTitle("Ask Failed");
+}
 
 function formatResponse(result) {
   const sources = result.sources.length
     ? `\n\nSources:\n${result.sources.map((source) => `- ${source}`).join("\n")}`
     : "";
   return `${result.answer}${sources}`;
-}
-
-async function sendChunkedResponse(interaction, response) {
-  const chunks = chunkMessage(response, MESSAGE_CHUNK_LENGTH);
-
-  await interaction.editReply({ embeds: [createResponseEmbed(chunks[0])] });
-
-  for (const chunk of chunks.slice(1)) {
-    await interaction.followUp({ embeds: [createResponseEmbed(chunk)] });
-  }
 }
 
 function chunkMessage(message, chunkLength) {
@@ -106,3 +73,5 @@ function getUserFacingError(error) {
 
   return "There was an error while answering your question.";
 }
+
+module.exports = { createAskErrorEmbed, getAskResponseEmbeds };
