@@ -4,6 +4,10 @@ discord:
   adminUserIds: []
   moderatorRoleIds: []
 
+commands:
+  view:
+    allowEveryone: true
+
 chat:
   providers:
     - openrouter
@@ -12,7 +16,7 @@ providers:
   openrouter:
     name: OpenRouter
     baseUrl: https://openrouter.ai/api/v1
-    model: google/gemma-4-31b-it:free
+    model: deepseek/deepseek-v4-flash
     embeddingModel: openai/text-embedding-3-small
     temperature: 0.2
     defaultHeaders:
@@ -22,7 +26,7 @@ providers:
   nvidia:
     name: NVIDIA
     baseUrl: https://integrate.api.nvidia.com/v1
-    model: deepseek-ai/deepseek-v4-flash
+    model: moonshotai/kimi-k2.5
     temperature: 1
     topP: 0.95
     maxTokens: 16384

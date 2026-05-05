@@ -294,6 +294,19 @@ function getRetrievalConfig() {
   };
 }
 
+function getViewCommandConfig() {
+  const commands = getObject(getAppConfig().commands, "commands");
+  const view = getObject(commands.view, "commands.view");
+
+  return {
+    allowEveryone: getBoolean(
+      view.allowEveryone,
+      true,
+      "commands.view.allowEveryone",
+    ),
+  };
+}
+
 function isAdminUser(userId) {
   return getDiscordConfig().adminUserIds.includes(userId);
 }
@@ -305,6 +318,15 @@ function canUseAdminCommand(interaction, discordConfig = getDiscordConfig()) {
 
   return getInteractionRoleIds(interaction).some((roleId) =>
     moderatorRoleIds.has(roleId),
+  );
+}
+
+function canUseViewCommand(interaction, discordConfig = getDiscordConfig()) {
+  const viewConfig = getViewCommandConfig();
+
+  return (
+    viewConfig.allowEveryone ||
+    canUseAdminCommand(interaction, discordConfig)
   );
 }
 
@@ -528,6 +550,7 @@ function formatProviderName(id) {
 module.exports = {
   assertConfig,
   canUseAdminCommand,
+  canUseViewCommand,
   getConfiguredProviders,
   getDiscordConfig,
   getDiscordConfigFrom,
@@ -536,6 +559,7 @@ module.exports = {
   getProviderConfig,
   getQdrantConfig,
   getRetrievalConfig,
+  getViewCommandConfig,
   isAdminUser,
   isRetrievalDebugEnabled,
   readConfigFile,
