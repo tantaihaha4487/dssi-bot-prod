@@ -47,11 +47,17 @@ discord:
   guildId: "YOUR_GUILD_ID"
   adminUserIds: []
   moderatorRoleIds: []
+
+commands:
+  view:
+    allowEveryone: true
 ```
 
 Keep Discord IDs quoted. Discord snowflake IDs are larger than JavaScript's safe integer range.
 
-Mention-based questions and `/ping` are public. `/upload`, `/refresh`, and `/reload` require `discord.adminUserIds` or `discord.moderatorRoleIds`.
+Mention-based questions and `/ping` are public. `/view` is also public while `commands.view.allowEveryone` is `true`. Set it to `false` if file viewing should require `discord.adminUserIds` or `discord.moderatorRoleIds`.
+
+`/upload`, `/refresh`, and `/reload` always require `discord.adminUserIds` or `discord.moderatorRoleIds`. If both lists are empty, those admin commands are denied for everyone.
 
 Enable Message Content Intent for the bot in the Discord Developer Portal so mentions like `@bot what's DSSI` include the question text.
 
@@ -80,7 +86,7 @@ More detail: [Knowledge Files](knowledge-files.md).
 npm run deploy
 ```
 
-Deploy after changing command definitions or after first setup. You do not need to redeploy when changing `data/`, `.env`, or most `config.yaml` settings.
+Deploy after changing command definitions or after first setup. You do not need to redeploy when changing `data/`, `.env`, or runtime config values such as command access, provider order, models, or retrieval settings.
 
 If `discord.clientId` or `discord.guildId` is empty, deploy skips command registration and prints a warning.
 

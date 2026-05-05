@@ -63,6 +63,19 @@ Behavior:
 - Folder paths are normalized and must stay inside `data/`.
 - After saving the file, the bot refreshes the vector index automatically.
 
+## Viewing Files From Discord
+
+`/view` sends an existing knowledge file from `data/` back into Discord.
+
+Behavior:
+
+- The file option autocompletes matching paths under `data/`.
+- When `commands.view.allowEveryone` is `true`, every user can see suggestions and use `/view`.
+- When `commands.view.allowEveryone` is `false`, `/view` requires `discord.adminUserIds` or `discord.moderatorRoleIds`.
+- The command validates the selected path so it stays inside `data/`.
+- Files within Discord's attachment limit are sent directly.
+- Larger files are uploaded to tmpfiles and returned as a link.
+
 ## Image Text Cache
 
 Images are converted to text during indexing and cached under `.cache/image-text/` by default.

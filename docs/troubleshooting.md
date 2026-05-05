@@ -44,6 +44,8 @@ docker compose logs -f bot
 
 `/upload`, `/refresh`, and `/reload` require admin config.
 
+`/view` also requires admin config when `commands.view.allowEveryone` is `false`.
+
 Add your user ID or a moderator role ID:
 
 ```yaml
@@ -55,6 +57,14 @@ discord:
 ```
 
 Run `/reload` after editing `config.yaml`, or restart if reload is not currently available to you.
+
+To make `/view` public again:
+
+```yaml
+commands:
+  view:
+    allowEveryone: true
+```
 
 ## Mentions Get No Feedback
 

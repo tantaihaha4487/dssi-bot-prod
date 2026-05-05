@@ -21,23 +21,26 @@ The bot replies with an answer and source filenames when available.
 Public commands:
 
 - `/ping` checks whether the bot responds.
+- `/view file:<path>` sends a knowledge file from `data/` into Discord when `commands.view.allowEveryone` is `true`.
 
 Admin commands:
 
 - `/upload file:<attachment> folder:<optional>` saves a knowledge file and refreshes the index.
+- `/view file:<path>` when `commands.view.allowEveryone` is `false`.
 - `/refresh` rebuilds the vector database from `data/`.
 - `/reload` reloads `config.yaml` without restarting the bot.
 
-Admin commands require `discord.adminUserIds` or `discord.moderatorRoleIds` in `config.yaml`.
+Admin commands require `discord.adminUserIds` or `discord.moderatorRoleIds` in `config.yaml`. `/view` autocomplete follows the same access rule when it is restricted, so non-authorized users do not see internal `data/` paths.
 
 ## Typical Workflow
 
 1. Add or upload knowledge files.
 2. Run `/refresh` if files changed outside `/upload`.
 3. Ask by mentioning the bot.
-4. Edit `config.yaml` when tuning providers or retrieval.
-5. Run `/reload`.
-6. Run `/refresh` if the config change affects indexing.
+4. Use `/view` when you need to send a source file back to Discord.
+5. Edit `config.yaml` when tuning providers, command access, or retrieval.
+6. Run `/reload`.
+7. Run `/refresh` if the config change affects indexing.
 
 ## Ask Examples
 
@@ -59,6 +62,8 @@ Run `/refresh` after changing:
 - `imageText.provider`, `imageText.model`, or `imageText.promptVersion`.
 
 You do not need `/refresh` after changing chat model fallback order unless you also changed indexing settings.
+
+You do not need `/refresh` after changing `commands.view.allowEveryone`; run `/reload` instead.
 
 ## Reload Rules
 

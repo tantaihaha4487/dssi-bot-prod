@@ -9,7 +9,7 @@ Related pages: [Setup Guide](setup.md), [Provider Guide](providers.md), [Operati
 ## File Responsibilities
 
 - `.env` stores `BOT_TOKEN`, provider API keys, and `QDRANT_API_KEY`.
-- `config.yaml` stores Discord IDs, provider order, model names, Qdrant URL/collection, embedding settings, image text settings, and retrieval tuning.
+- `config.yaml` stores Discord IDs, command access, provider order, model names, Qdrant URL/collection, embedding settings, image text settings, and retrieval tuning.
 - `docker-compose.yml` supplies container-only runtime overrides for service URLs.
 
 Do not commit `.env`. Do not hardcode secrets in docs, config, source code, or knowledge files.
@@ -33,6 +33,23 @@ Access behavior:
 - Empty admin and moderator lists deny all admin commands.
 - IDs should be quoted strings.
 
+## Command Access
+
+Command-specific access settings live under `commands`:
+
+```yaml
+commands:
+  view:
+    allowEveryone: true
+```
+
+`commands.view.allowEveryone` controls `/view`:
+
+- `true`: every user can autocomplete and send files from `data/`.
+- `false`: only users in `discord.adminUserIds` or members with `discord.moderatorRoleIds` can use `/view`.
+
+Use `false` if file and folder names inside `data/` should not be visible through autocomplete suggestions.
+
 ## Runtime Reload
 
 Use `/reload` after editing `config.yaml` to reload normal runtime settings without restarting the bot.
@@ -40,6 +57,7 @@ Use `/reload` after editing `config.yaml` to reload normal runtime settings with
 Reload applies these settings:
 
 - Admin users and moderator roles.
+- Command access settings.
 - Chat provider order and provider model settings.
 - Qdrant target settings.
 - Embedding provider settings.

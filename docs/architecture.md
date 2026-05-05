@@ -45,11 +45,13 @@ With Docker Compose, the container also runs `npm run deploy` before `npm start`
 
 Commands live in `src/commands/`.
 
-- `ask.js` handles user questions.
 - `upload.js` saves Discord attachments and triggers refresh.
+- `view.js` sends existing knowledge files from `data/` back to Discord.
 - `refresh.js` rebuilds the vector index.
 - `reload.js` reloads `config.yaml`.
 - `ping.js` is a basic health check.
+
+Mention-based questions are handled by `src/events/messageCreate/` rather than a slash command.
 
 `src/events/interactionCreate/commandExecute.js` dispatches chat input commands and autocomplete requests.
 

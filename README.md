@@ -1,64 +1,53 @@
 # Discord Vector RAG Bot
 
-Discord.js v14 bot that answers questions when mentioned, backed by local knowledge files, image text extraction, keyword routing, Ollama local embeddings, Qdrant vector search, and configurable OpenAI-compatible chat providers.
+Discord.js v14 bot that answers questions from local knowledge files when mentioned. It supports text, PDF, and image knowledge files, stores embeddings in Qdrant, uses Ollama for local embeddings by default, and can answer with any configured OpenAI-compatible chat provider.
 
-Detailed documentation lives in [`docs/`](docs/README.md): [setup](docs/setup.md), [configuration](docs/configuration.md), [knowledge files](docs/knowledge-files.md), [operations](docs/operations.md), [providers](docs/providers.md), [architecture](docs/architecture.md), and [troubleshooting](docs/troubleshooting.md).
+## Documentation
 
-## Tech Stack
+Detailed guides live in [`docs/`](docs/README.md):
 
-- Node.js
-- Discord.js v14
-- LangChain text splitters and OpenAI-compatible chat clients
-- Ollama local embeddings by default
-- Optional remote embeddings through OpenAI-compatible providers
-- OpenRouter image text extraction with Gemini-compatible vision models
-- Qdrant vector database
-- Docker and Docker Compose
-- `pdf-parse` for PDF knowledge files
+- [Setup](docs/setup.md): first install, Discord credentials, slash commands, and run modes.
+- [Configuration](docs/configuration.md): `config.yaml`, `.env`, command access, providers, embeddings, Qdrant, and retrieval tuning.
+- [Knowledge Files](docs/knowledge-files.md): supported files, folder layout, uploads, viewing files, indexing, and image text cache.
+- [Operations](docs/operations.md): daily command usage, refresh/reload rules, Docker commands, and maintenance.
+- [Providers](docs/providers.md): built-in providers, fallback order, credentials, and custom endpoints.
+- [Architecture](docs/architecture.md): Discord command layer, RAG pipeline, retrieval strategy, and vector store flow.
+- [Troubleshooting](docs/troubleshooting.md): common setup and runtime failures.
 
 ## Features
 
-- Slash command loader from the original Discord.js template
-- Mention-based questions against local knowledge files, for example `@bot what's DSSI`
-- `/upload` command for adding `.txt`, `.pdf`, or image files from Discord
-- `/refresh` command for rebuilding the Qdrant index without restarting
-- `/reload` command for reloading `config.yaml` without restarting
-- `/upload`, `/refresh`, and `/reload` are restricted by `discord.adminUserIds` and `discord.moderatorRoleIds` in `config.yaml`
-- Supports `.txt`, `.pdf`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.heic`, and `.heif` files in `data/` and nested folders
-- Caches extracted image text so unchanged images do not call the vision model again
-- Keyword-first retrieval for exact/factual questions
-- Qdrant semantic retrieval for general questions
-- Local Ollama embedding configuration in `config.yaml`
-- Optional remote embedding configuration using `config.yaml` and provider API keys
-- Configurable fallback order for OpenAI-compatible chat providers
-- Docker Compose setup for the bot, Qdrant, and Ollama
+- Mention-based RAG answers, for example `@bot what is this program about?`.
+- Slash commands: `/ping`, `/upload`, `/view`, `/refresh`, and `/reload`.
+- Recursive `data/` knowledge loading for `.txt`, `.pdf`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.heic`, and `.heif`.
+- `/upload` can save supported Discord attachments into `data/` and refresh the index automatically.
+- `/view` can send knowledge files back to Discord; public access is configurable.
+- Image text extraction with cache reuse for unchanged images.
+- Hybrid retrieval: keyword-first for exact matches and Qdrant semantic search for general questions.
+- Local Ollama embeddings by default, with optional remote embeddings.
+- Configurable OpenAI-compatible chat provider fallback order.
+- Docker Compose stack for the bot, Qdrant, Ollama, and default embedding model pull.
 
-## Quick Setup
+## Quick Start
 
-The basic setup needs a Discord bot token in `.env`, Discord app IDs in `config.yaml`, and one chat provider API key. Fallback providers, Qdrant settings, and embedding settings are optional.
-
-1. Install dependencies:
+### 1. Install
 
 ```bash
 npm install
-```
-
-2. Create `.env`:
-
-```bash
 cp .env.example .env
 ```
 
-3. Fill in the required credentials in `.env`:
+Fill the required secrets in `.env`:
 
 ```env
 BOT_TOKEN=
 AI_PROVIDER_OPENROUTER_API_KEY=
 ```
 
-Paste your real Discord bot token and provider API key after `=`. You only need one chat provider API key to start. Fallback providers are optional and can be added later.
+You only need one chat provider API key to start. Keep API keys in `.env`, not in `config.yaml`.
 
-4. Fill in Discord app IDs in `config.yaml`:
+### 2. Configure Discord
+
+Edit `config.yaml`:
 
 ```yaml
 discord:
@@ -66,423 +55,92 @@ discord:
   guildId: "YOUR_GUILD_ID"
   adminUserIds: []
   moderatorRoleIds: []
+
+commands:
+  view:
+    allowEveryone: true
 ```
 
-Keep Discord IDs quoted. Leave both access lists empty to disable admin commands, or add your Discord user ID or moderator role IDs if you want to use `/upload`, `/refresh`, and `/reload`.
+Keep Discord IDs quoted. Add your user ID to `adminUserIds` or role IDs to `moderatorRoleIds` if you want to use admin commands such as `/upload`, `/refresh`, and `/reload`.
 
-5. Add knowledge files:
+`/view` is public by default. Set `commands.view.allowEveryone: false` to restrict it to the same admin users and moderator roles.
 
-Place `.txt`, `.pdf`, or supported image files in `data/` or folders inside `data/`.
+Enable Message Content Intent in the Discord Developer Portal so the bot can read the question text after a mention.
 
-Example:
+### 3. Add Knowledge Files
+
+Put supported files under `data/`:
 
 ```text
 data/
-  admissions-ubu-2569.txt
+  admissions-2569.txt
   handbooks/
-    handbook.pdf
-  faq/
-    faq.txt
+    student-handbook.pdf
   posters/
     event.jpg
 ```
 
-6. Deploy Discord slash commands:
+Subfolders are scanned recursively. Do not put secrets or private credentials in knowledge files.
+
+### 4. Deploy Commands
 
 ```bash
 npm run deploy
 ```
 
-You only need to redeploy slash commands when command definitions change. If `discord.clientId` or `discord.guildId` is empty, deploy logs a warning and skips command registration.
+Redeploy only when slash command definitions change. Data and most config changes do not require redeploying commands.
 
-7. Start the bot and local services:
+### 5. Run
+
+Recommended local stack:
 
 ```bash
 docker compose up -d --build
 ```
 
-Docker Compose deploys slash commands, starts Qdrant, starts Ollama, pulls the default embedding model, and runs the bot. No Qdrant or Ollama values are required in `.env` for the Compose setup.
+This starts the bot, Qdrant, Ollama, and a helper service that pulls the default embedding model.
 
-## Optional Config
-
-Use `.env` for credentials only. Use `config.yaml` for normal app settings such as Discord IDs, admin users, provider order, models, Qdrant, embeddings, and retrieval tuning.
-
-Copy `.env.advanced.example` if you want a full credential reference for all built-in providers.
-
-### Discord And Admins
-
-```yaml
-discord:
-  clientId: "YOUR_CLIENT_ID"
-  guildId: "YOUR_GUILD_ID"
-  adminUserIds:
-    - "YOUR_DISCORD_USER_ID"
-  moderatorRoleIds:
-    - "YOUR_MODERATOR_ROLE_ID"
-```
-
-Mention-based questions and `/ping` are public. `/upload`, `/refresh`, and `/reload` only work for users listed in `discord.adminUserIds` or members with a role listed in `discord.moderatorRoleIds`.
-
-The bot needs the Message Content Intent enabled in the Discord Developer Portal so it can read questions after mentions.
-
-In restricted channels, place the bot role high enough and allow `View Channel`, `Send Messages`, and `Read Message History`. Without `Read Message History`, Discord rejects normal reply messages; the bot falls back to plain channel sends when possible.
-
-If both access lists are empty, `/upload`, `/refresh`, and `/reload` are denied for everyone. Discord IDs must be quoted strings because they are larger than JavaScript's safe integer range.
-
-### Runtime Config Reload
-
-Use `/reload` after editing `config.yaml` to apply normal config changes without restarting the bot. It reloads admin users, moderator roles, provider settings, retrieval settings, Qdrant settings, and image text settings.
-
-`/reload` does not reload `.env`; changing API keys or `BOT_TOKEN` still requires restarting the bot process. If reload changes embedding, Qdrant, chunking, or image text settings, run `/refresh` afterward so the vector index matches the new config.
-
-### Fallback Chat Providers
-
-Fallback providers are not required. By default, `config.yaml` uses OpenRouter only:
-
-```yaml
-chat:
-  providers:
-    - openrouter
-```
-
-Set the matching provider API key in `.env`:
-
-```env
-AI_PROVIDER_OPENROUTER_API_KEY=
-```
-
-To enable fallback, set `chat.providers` in the order you want and add keys for the providers you want to use:
-
-```yaml
-chat:
-  providers:
-    - openrouter
-    - nvidia
-    - openai
-```
-
-```env
-AI_PROVIDER_OPENROUTER_API_KEY=
-AI_PROVIDER_NVIDIA_API_KEY=
-AI_PROVIDER_OPENAI_API_KEY=
-```
-
-Providers without API keys are skipped.
-
-### Qdrant
-
-The default local Qdrant config in `config.yaml` is:
-
-```yaml
-qdrant:
-  url: http://localhost:6333
-  collection: discord_vector_rag
-  indexId: discord-vector-rag
-```
-
-Only change these if you are not using the defaults. Docker Compose uses a runtime-only override for the Qdrant URL inside the bot container so `localhost` in `config.yaml` remains correct for local non-Docker runs.
-
-For remote Qdrant, keep the API key in `.env`:
-
-```env
-QDRANT_API_KEY=
-```
-
-### Embeddings
-
-The default embedding provider in `config.yaml` is local Ollama:
-
-```yaml
-embeddings:
-  provider: ollama
-  ollama:
-    baseUrl: http://localhost:11434
-    model: nomic-embed-text
-```
-
-Docker Compose uses local Ollama embeddings, uses a runtime-only override for the Ollama URL inside the bot container, and pulls `nomic-embed-text` automatically.
-
-If you change `embeddings.ollama.model` when using Docker Compose, also make sure that model exists in the Ollama container. You can set `OLLAMA_EMBEDDING_MODEL` before starting Compose so the `ollama-model` service pulls it, or pull it manually.
-
-If you run without Docker Compose, install Ollama and pull the default embedding model:
-
-```bash
-ollama pull nomic-embed-text
-```
-
-Remote embeddings are optional. They reuse the same provider env format as chat providers:
-
-```yaml
-embeddings:
-  provider: openrouter
-
-providers:
-  openrouter:
-    embeddingModel: openai/text-embedding-3-small
-```
-
-```env
-AI_PROVIDER_OPENROUTER_API_KEY=
-```
-
-Do not change `embeddings.provider` unless you specifically want remote embeddings.
-
-### Image Text Extraction
-
-Image files are converted to searchable text during indexing. By default, this uses OpenRouter with a Gemini vision model:
-
-```yaml
-imageText:
-  provider: openrouter
-  model: google/gemini-2.5-flash
-  cacheDir: .cache/image-text
-  maxBytes: 15728640
-  promptVersion: v1
-```
-
-Set the matching provider key in `.env`:
-
-```env
-AI_PROVIDER_OPENROUTER_API_KEY=
-```
-
-The extracted text is cached under `.cache/image-text/` using the image hash, provider, model, and prompt version. Change `imageText.promptVersion` when you want to force re-extraction after changing extraction behavior.
-
-Images are sent to the configured image text provider during extraction. Do not add private images unless that is acceptable for your provider account and data policy.
-
-### Retrieval Debug Logs
-
-```yaml
-retrieval:
-  debug: false
-```
-
-Set `retrieval.debug: true` to log retrieval mode, scores, source filenames, and chunk indexes without logging full chunk text.
-
-## Knowledge Files
-
-Supported file types:
-
-- `.txt` files are read as UTF-8 text.
-- `.pdf` files are parsed with `pdf-parse`.
-- `.png`, `.jpg`, `.jpeg`, `.webp`, `.heic`, and `.heif` files are sent to `imageText.provider` for text extraction.
-
-Data rules:
-
-- Put source documents inside `data/` or folders inside `data/`.
-- Subfolders inside `data/` are scanned recursively.
-- Keep filenames descriptive because filenames are shown in Discord as `Sources`.
-- Do not put secrets, API keys, or private credentials in knowledge files.
-- Large PDFs work, but they create more chunks and may appear more often in retrieval results.
-- Image files must fit under `imageText.maxBytes` for inline extraction.
-
-Reindex behavior:
-
-- The bot indexes `data/` on startup.
-- Use `/refresh` to rebuild the vector database while the bot is running.
-- Use `/upload` to save a `.txt`, `.pdf`, or image attachment under `data/`; uploads refresh the vector database automatically.
-- `/upload` can autocomplete existing folders, and it can create a new typed folder path under `data/`.
-- Before indexing, it deletes old Qdrant points for the current `qdrant.indexId`.
-- If the embedding vector size changes, the bot recreates the Qdrant collection before indexing.
-- Changing between embedding providers requires reindexing because vector dimensions and embedding spaces differ.
-- If you add, edit, or remove files outside Discord while the bot is running, use `/refresh` so it rebuilds the Qdrant index.
-- Unchanged image files reuse cached extracted text from `.cache/image-text/`.
-- You do not need to redeploy slash commands after changing `data/`.
-
-Retrieval behavior:
-
-- Exact/factual questions with strong keyword matches can use keyword-only retrieval and skip Qdrant embedding.
-- Medium-confidence keyword matches use keyword results first, then a small Qdrant fill.
-- General semantic questions use Qdrant first with local Ollama embeddings, then keyword fill.
-
-Docker data behavior:
-
-- With Docker Compose, `./data` is mounted into the bot container as `/app/data` so `/upload` can write files.
-- With Docker Compose, `./.cache` is mounted into the bot container as `/app/.cache` so image text extraction cache survives rebuilds.
-- With Docker Compose, `./config.yaml` is mounted into the bot container as `/app/config.yaml`; restart the bot after changing config.
-- If you use `docker compose up -d --build`, local files in `data/` are available to the container.
-- If you run only the prebuilt Docker image without the Compose volume, rebuild the image after changing `data/`.
-
-## Run With Docker Compose
-
-Use this when Docker Compose is installed. This deploys slash commands, starts Qdrant, starts Ollama, pulls the embedding model, and starts the bot.
-
-1. Start the stack:
-
-```bash
-docker compose up -d --build
-```
-
-Inside Compose, the bot uses runtime-only overrides for the Qdrant URL, Ollama URL, and embedding provider. Other non-secret settings still come from `config.yaml`. The bot container runs `npm run deploy` before `npm start`, so slash commands are registered before the bot starts when Discord app IDs are configured. If `discord.clientId` or `discord.guildId` is empty, deploy logs a warning and the bot still starts. The `ollama-model` service pulls `nomic-embed-text` automatically before the bot starts.
-
-No host Ollama install is required for Docker Compose. The first run downloads the Qdrant image, Ollama image, Node dependencies, and the embedding model, so it can take several minutes and use extra disk space.
-
-2. Watch bot logs:
+Useful logs:
 
 ```bash
 docker compose logs -f bot
-```
-
-3. Watch model pull logs:
-
-```bash
 docker compose logs -f ollama-model
 ```
 
-4. Stop the stack:
-
-```bash
-docker compose down
-```
-
-Qdrant data is stored in `qdrant_storage`. Ollama models are stored in `ollama_storage`.
-
-The Compose file does not publish Qdrant or Ollama ports to the host by default, which avoids port conflicts on fresh machines. If you need host access for debugging, add a local override file:
-
-```yaml
-services:
-  qdrant:
-    ports:
-      - "6333:6333"
-      - "6334:6334"
-  ollama:
-    ports:
-      - "11434:11434"
-```
-
-## Run Without Docker Compose
-
-Use this when your Docker install does not support `docker compose`.
-
-1. Install Ollama and pull the default embedding model:
+Without Docker Compose, run Qdrant and Ollama yourself, then start the bot:
 
 ```bash
 ollama pull nomic-embed-text
-```
-
-2. Start Qdrant with plain Docker:
-
-```bash
-docker run -d \
-  --name discord-vector-qdrant \
-  -p 6333:6333 \
-  -p 6334:6334 \
-  -v discord_vector_qdrant_storage:/qdrant/storage \
-  qdrant/qdrant:latest
-```
-
-3. Start the bot locally:
-
-```bash
 npm start
 ```
 
-4. Stop Qdrant when finished:
+See [Setup](docs/setup.md) for the full non-Compose path.
 
-```bash
-docker stop discord-vector-qdrant
-```
+## Command Access
 
-5. Start the same Qdrant container again later:
+Public by default:
 
-```bash
-docker start discord-vector-qdrant
-```
+- Mention questions, for example `@bot what is DSSI?`.
+- `/ping`.
+- `/view`, unless `commands.view.allowEveryone` is set to `false`.
 
-## Local Run With Compose Qdrant Only
+Restricted to `discord.adminUserIds` or `discord.moderatorRoleIds`:
 
-Use this when you want Qdrant in Docker but the bot and Ollama running directly on your machine.
+- `/upload`: save a knowledge file and refresh the index.
+- `/refresh`: rebuild the vector database from `data/`.
+- `/reload`: reload `config.yaml` without restarting.
+- `/view` when `commands.view.allowEveryone: false`.
 
-1. Install Ollama and pull the default embedding model:
-
-```bash
-ollama pull nomic-embed-text
-```
-
-2. Start only Qdrant:
-
-```bash
-docker compose up -d qdrant
-```
-
-3. Start the bot locally:
-
-```bash
-npm start
-```
-
-## Use The Bot
-
-Mention the bot with a question in Discord:
+## Project Map
 
 ```text
-@bot What is this program about?
-```
-
-Examples:
-
-```text
-@bot 2569 admission requirement คืออะไร
-@bot ค่าเทอม 2568 เท่าไหร่
-@bot Data Science and Software Innovation เรียนเกี่ยวกับอะไร
-```
-
-On startup, the bot loads files from `data/` and its subfolders, chunks them, clears its own `qdrant.indexId` points from Qdrant, and indexes the current chunks before searching.
-
-## Provider Reference
-
-`chat.providers` in `config.yaml` controls fallback order. You do not need to change it for the basic setup. Providers without an API key in `.env` are skipped.
-
-Built-in OpenAI-compatible providers:
-
-- `openrouter`
-- `nvidia`
-- `openai`
-- `groq`
-- `together`
-- `deepinfra`
-- `fireworks`
-
-Provider settings live in `config.yaml`:
-
-```yaml
-chat:
-  providers:
-    - openrouter
-    - nvidia
-
-providers:
-  openrouter:
-    model: google/gemma-4-31b-it:free
-    baseUrl: https://openrouter.ai/api/v1
-    temperature: 0.2
-    embeddingModel: openai/text-embedding-3-small
-
-  nvidia:
-    model: deepseek-ai/deepseek-v4-flash
-    baseUrl: https://integrate.api.nvidia.com/v1
-    temperature: 1
-    topP: 0.95
-    maxTokens: 16384
-```
-
-Provider credentials stay in `.env`:
-
-```env
-AI_PROVIDER_<NAME>_API_KEY=your_key
-```
-
-Custom OpenAI-compatible endpoints also work by adding a provider name to `chat.providers`, adding its settings under `providers.<name>`, and setting `AI_PROVIDER_<NAME>_API_KEY` in `.env`.
-
-## Structure
-
-```text
-data/                      Local RAG knowledge files, scanned recursively
-.cache/image-text/         Cached text extracted from image knowledge files
-config.yaml                Non-secret app, provider, retrieval, and admin config
+data/                      Knowledge files scanned recursively
+.cache/image-text/         Cached text extracted from images
+config.yaml                Non-secret app, command, provider, and retrieval config
+.env                       Local secrets, not committed
+src/commands/              Slash commands
 src/events/messageCreate/  Mention-based RAG question handler
-src/rag/                   RAG loading, Qdrant retrieval, LLM, and answer flow
-src/events/                Discord event handlers
+src/rag/                   Loading, retrieval, vector store, and answer flow
 src/utils/                 Command/event loader and deploy script
 docker-compose.yml         Bot, Qdrant, and Ollama services
 Dockerfile                 Bot container image
