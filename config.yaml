@@ -1,8 +1,12 @@
 discord:
   clientId: ""
   guildId: ""
-  adminUserIds: [""]
-  moderatorRoleIds: [""]
+  adminUserIds: []
+  moderatorRoleIds: []
+
+commands:
+  view:
+    allowEveryone: true
 
 chat:
   providers:
