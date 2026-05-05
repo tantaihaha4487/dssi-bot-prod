@@ -1,8 +1,8 @@
 discord:
-  clientId: "1498347620278472945"
-  guildId: "1002607180811354122"
-  adminUserIds: ["724573965955366922"]
-  moderatorRoleIds: []
+  clientId: ""
+  guildId: ""
+  adminUserIds: [""]
+  moderatorRoleIds: [""]
 
 chat:
   providers:
