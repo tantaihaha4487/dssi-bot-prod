@@ -169,7 +169,7 @@ function createNotAllowedEmbed(interaction) {
   return new EmbedBuilder()
     .setTitle("Reload Denied")
     .setDescription(
-      `Only users listed in \`discord.adminUserIds\` or members with \`discord.moderatorRoleIds\` can use this command. Your user ID is \`${interaction.user.id}\`.`,
+      `Only users listed in \`DISCORD_ADMIN_USER_IDS\` or members with \`DISCORD_MODERATOR_ROLE_IDS\` can use this command. Your user ID is \`${interaction.user.id}\`.`,
     );
 }
 

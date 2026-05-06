@@ -149,7 +149,7 @@ function getTmpfilesUrl(result) {
 
 async function replyNotAllowed(interaction) {
   await interaction.reply({
-    content: `Only users listed in \`discord.adminUserIds\`, members with \`discord.moderatorRoleIds\`, or everyone when \`commands.view.allowEveryone\` is enabled can use this command. Your user ID is \`${interaction.user.id}\`.`,
+    content: `Only users listed in \`DISCORD_ADMIN_USER_IDS\`, members with \`DISCORD_MODERATOR_ROLE_IDS\`, or everyone when \`commands.view.allowEveryone\` is enabled can use this command. Your user ID is \`${interaction.user.id}\`.`,
     ephemeral: true,
   });
 }

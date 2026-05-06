@@ -2,28 +2,25 @@
 
 [Back to docs index](README.md) | [Back to project README](../README.md)
 
-Use `.env` for secrets and `config.yaml` for normal runtime settings.
+Use `.env` for secrets and Discord IDs. Use `config.yaml` for normal runtime settings.
 
 Related pages: [Setup Guide](setup.md), [Provider Guide](providers.md), [Operations Guide](operations.md), [Troubleshooting](troubleshooting.md).
 
 ## File Responsibilities
 
-- `.env` stores `BOT_TOKEN`, provider API keys, and `QDRANT_API_KEY`.
-- `config.yaml` stores Discord IDs, command access, provider order, model names, Qdrant URL/collection, embedding settings, image text settings, and retrieval tuning.
-- `docker-compose.yml` supplies container-only runtime overrides for service URLs.
+- `.env` stores `BOT_TOKEN`, Discord IDs, provider API keys, and `QDRANT_API_KEY`.
+- `config.yaml` stores command access, provider order, model names, Qdrant URL/collection, embedding settings, image text settings, and retrieval tuning.
+- `docker-compose.yml` passes Discord env vars through and supplies container-only runtime overrides for service URLs.
 
 Do not commit `.env`. Do not hardcode secrets in docs, config, source code, or knowledge files.
 
 ## Discord
 
-```yaml
-discord:
-  clientId: "YOUR_CLIENT_ID"
-  guildId: "YOUR_GUILD_ID"
-  adminUserIds:
-    - "YOUR_DISCORD_USER_ID"
-  moderatorRoleIds:
-    - "YOUR_MODERATOR_ROLE_ID"
+```env
+DISCORD_CLIENT_ID=YOUR_CLIENT_ID
+DISCORD_GUILD_ID=YOUR_GUILD_ID
+DISCORD_ADMIN_USER_IDS=YOUR_DISCORD_USER_ID
+DISCORD_MODERATOR_ROLE_IDS=YOUR_MODERATOR_ROLE_ID
 ```
 
 Access behavior:
@@ -31,7 +28,7 @@ Access behavior:
 - Mention-based questions and `/ping` are public.
 - `/upload`, `/refresh`, and `/reload` require an admin user ID or moderator role ID.
 - Empty admin and moderator lists deny all admin commands.
-- IDs should be quoted strings.
+- Use comma-separated values for multiple admin user IDs or moderator role IDs.
 
 ## Command Access
 
@@ -46,7 +43,7 @@ commands:
 `commands.view.allowEveryone` controls `/view`:
 
 - `true`: every user can autocomplete and send files from `data/`.
-- `false`: only users in `discord.adminUserIds` or members with `discord.moderatorRoleIds` can use `/view`.
+- `false`: only users in `DISCORD_ADMIN_USER_IDS` or members with `DISCORD_MODERATOR_ROLE_IDS` can use `/view`.
 
 Use `false` if file and folder names inside `data/` should not be visible through autocomplete suggestions.
 
@@ -56,7 +53,6 @@ Use `/reload` after editing `config.yaml` to reload normal runtime settings with
 
 Reload applies these settings:
 
-- Admin users and moderator roles.
 - Command access settings.
 - Chat provider order and provider model settings.
 - Qdrant target settings.
@@ -64,7 +60,7 @@ Reload applies these settings:
 - Image text settings.
 - Retrieval settings.
 
-Reload does not reload `.env` or `BOT_TOKEN`. Restart the bot after changing secrets or the Discord token.
+Reload does not reload `.env`, `BOT_TOKEN`, or Discord ID/access env vars. Restart the bot after changing them.
 
 Run `/refresh` after `/reload` if you changed embeddings, Qdrant, chunking, or image text settings.
 

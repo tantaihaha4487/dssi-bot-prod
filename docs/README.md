@@ -7,7 +7,7 @@ This directory contains the detailed guides for running, configuring, and operat
 ## Start Here
 
 - [Setup Guide](setup.md) covers first install, credentials, slash command deploys, mention setup, and run modes.
-- [Configuration Guide](configuration.md) explains `config.yaml`, `.env`, command access, reloads, embeddings, Qdrant, and retrieval settings.
+- [Configuration Guide](configuration.md) explains `.env`, `config.yaml`, command access, reloads, embeddings, Qdrant, and retrieval settings.
 - [Knowledge Files](knowledge-files.md) explains supported files, folder layout, uploads, viewing files, indexing, and image text extraction.
 - [Operations Guide](operations.md) covers mention-based questions, slash commands, Docker Compose, local runs, refreshes, reloads, and maintenance tasks.
 - [Provider Guide](providers.md) explains built-in OpenAI-compatible providers, fallback order, credentials, and custom providers.
@@ -24,7 +24,7 @@ Every docs page links back here and to the root [README](../README.md). Topic pa
 README.md                  Quick overview and basic usage
 docs/                      Detailed documentation
 config.yaml                Non-secret runtime configuration
-.env                       Local secrets, not committed
+.env                       Local secrets and Discord IDs, not committed
 data/                      Knowledge files scanned by the bot
 .cache/image-text/         Cached text extracted from image files
 src/commands/              Discord slash commands

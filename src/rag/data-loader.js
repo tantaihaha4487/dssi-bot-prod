@@ -9,6 +9,7 @@ const {
   isImageExtension,
   supportedImageExtensions,
 } = require("./image-text");
+const { normalizeSourcePath } = require("./path-normalizer");
 
 const dataDir = path.join(__dirname, "..", "..", "data");
 const textExtensions = new Set([".txt", ".pdf"]);
@@ -54,7 +55,10 @@ async function loadDocuments() {
 
       return new Document({
         pageContent: content.text,
-        metadata: { source: relativePath, ...content.metadata },
+        metadata: {
+          ...content.metadata,
+          source: normalizeSourcePath(relativePath),
+        },
       });
     }),
   );

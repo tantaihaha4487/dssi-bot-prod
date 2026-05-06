@@ -10,6 +10,7 @@ const {
 } = require("../rag/data-loader");
 const { canUseAdminCommand, getImageTextConfig } = require("../rag/config");
 const { isImageExtension } = require("../rag/image-text");
+const { normalizePathSegment } = require("../rag/path-normalizer");
 const { refreshKnowledgeVectorStore } = require("../rag/vector-store");
 
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
@@ -133,14 +134,13 @@ function getUploadTarget(filename, folder) {
 }
 
 function normalizeFolder(folder) {
-  const value = folder.trim();
-  if (!value || value === ".") return "";
+  if (!folder.trim() || folder === ".") return "";
 
-  const parts = value
+  const parts = folder
+    .normalize("NFC")
     .replace(/\\/g, "/")
     .replace(/^\/+|\/+$/g, "")
     .split("/")
-    .map((part) => part.trim())
     .filter(Boolean);
 
   if (parts.length === 0 || parts.some(isInvalidFolderPart)) {
@@ -151,13 +151,13 @@ function normalizeFolder(folder) {
 }
 
 function isInvalidFolderPart(part) {
-  return part === "." || part === ".." || /[<>:"|?*\x00-\x1F]/.test(part);
+  return part === "." || part === ".." || part.includes("\0");
 }
 
 function sanitizeFilename(filename) {
-  const name = path
-    .basename(filename.replace(/\\/g, "/"))
-    .replace(/[<>:"|?*\x00-\x1F]/g, "_");
+  const name = normalizePathSegment(path.basename(filename.replace(/\\/g, "/")), {
+    replaceInvalid: true,
+  });
 
   if (!name || name === "." || name === "..") {
     throw new Error("Attachment filename is invalid.");
@@ -225,7 +225,7 @@ function createErrorEmbed(error) {
 
 async function replyNotAllowed(interaction) {
   await interaction.reply({
-    content: `Only users listed in \`discord.adminUserIds\` or members with \`discord.moderatorRoleIds\` can use this command. Your user ID is \`${interaction.user.id}\`.`,
+    content: `Only users listed in \`DISCORD_ADMIN_USER_IDS\` or members with \`DISCORD_MODERATOR_ROLE_IDS\` can use this command. Your user ID is \`${interaction.user.id}\`.`,
     ephemeral: true,
   });
 }

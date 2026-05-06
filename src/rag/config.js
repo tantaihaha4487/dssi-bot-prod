@@ -20,6 +20,10 @@ const DEFAULT_IMAGE_TEXT_MODEL = "google/gemini-2.5-flash";
 const DEFAULT_IMAGE_TEXT_CACHE_DIR = ".cache/image-text";
 const DEFAULT_IMAGE_TEXT_MAX_BYTES = 15 * 1024 * 1024;
 const DEFAULT_IMAGE_TEXT_PROMPT_VERSION = "v1";
+const DISCORD_CLIENT_ID_ENV = "DISCORD_CLIENT_ID";
+const DISCORD_GUILD_ID_ENV = "DISCORD_GUILD_ID";
+const DISCORD_ADMIN_USER_IDS_ENV = "DISCORD_ADMIN_USER_IDS";
+const DISCORD_MODERATOR_ROLE_IDS_ENV = "DISCORD_MODERATOR_ROLE_IDS";
 
 const BUILT_IN_PROVIDERS = {
   ollama: {
@@ -248,23 +252,21 @@ function getImageTextConfig() {
 }
 
 function getDiscordConfig() {
-  return getDiscordConfigFrom(getAppConfig());
+  return getDiscordConfigFrom();
 }
 
-function getDiscordConfigFrom(config) {
-  const discord = getObject(config.discord, "discord");
-
+function getDiscordConfigFrom() {
   return {
-    clientId: getDiscordId(discord.clientId, "discord.clientId"),
-    guildId: getDiscordId(discord.guildId, "discord.guildId"),
-    adminUserIds: getDiscordIdList(
-      discord.adminUserIds,
-      "discord.adminUserIds",
+    clientId: getDiscordId(
+      getEnvValue(DISCORD_CLIENT_ID_ENV),
+      DISCORD_CLIENT_ID_ENV,
     ),
-    moderatorRoleIds: getDiscordIdList(
-      discord.moderatorRoleIds,
-      "discord.moderatorRoleIds",
+    guildId: getDiscordId(
+      getEnvValue(DISCORD_GUILD_ID_ENV),
+      DISCORD_GUILD_ID_ENV,
     ),
+    adminUserIds: getDiscordIdListFromEnv(DISCORD_ADMIN_USER_IDS_ENV),
+    moderatorRoleIds: getDiscordIdListFromEnv(DISCORD_MODERATOR_ROLE_IDS_ENV),
   };
 }
 
@@ -452,21 +454,20 @@ function getDiscordId(value, configPath) {
   if (value === undefined || value === null || value === "") return undefined;
 
   if (typeof value !== "string") {
-    throw new Error(`${configPath} in config.yaml must be a quoted string.`);
+    throw new Error(`${configPath} must be a string.`);
   }
 
   return value.trim() || undefined;
 }
 
-function getDiscordIdList(value, configPath) {
-  if (value === undefined || value === null) return [];
+function getDiscordIdListFromEnv(name) {
+  const value = getEnvValue(name);
 
-  if (!Array.isArray(value)) {
-    throw new Error(`${configPath} in config.yaml must be a list.`);
-  }
+  if (!value) return [];
 
   return value
-    .map((item) => getDiscordId(item, configPath))
+    .split(",")
+    .map((item) => getDiscordId(item, name))
     .filter(Boolean);
 }
 

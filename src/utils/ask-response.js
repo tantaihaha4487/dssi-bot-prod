@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, escapeMarkdown } = require("discord.js");
 const { askKnowledgeBase } = require("../rag/service");
 
 const MESSAGE_CHUNK_LENGTH = 3000;
@@ -17,9 +17,13 @@ function createAskErrorEmbed(error) {
 
 function formatResponse(result) {
   const sources = result.sources.length
-    ? `\n\nSources:\n${result.sources.map((source) => `- ${source}`).join("\n")}`
+    ? `\n\nSources:\n${result.sources.map((source) => `- ${formatSource(source)}`).join("\n")}`
     : "";
   return `${result.answer}${sources}`;
+}
+
+function formatSource(source) {
+  return escapeMarkdown(String(source).normalize("NFC"));
 }
 
 function chunkMessage(message, chunkLength) {
