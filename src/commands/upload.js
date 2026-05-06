@@ -225,7 +225,7 @@ function createErrorEmbed(error) {
 
 async function replyNotAllowed(interaction) {
   await interaction.reply({
-    content: `Only users listed in \`discord.adminUserIds\` or members with \`discord.moderatorRoleIds\` can use this command. Your user ID is \`${interaction.user.id}\`.`,
+    content: `Only users listed in \`DISCORD_ADMIN_USER_IDS\` or members with \`DISCORD_MODERATOR_ROLE_IDS\` can use this command. Your user ID is \`${interaction.user.id}\`.`,
     ephemeral: true,
   });
 }

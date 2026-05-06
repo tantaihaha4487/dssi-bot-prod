@@ -30,7 +30,7 @@ Admin commands:
 - `/refresh` rebuilds the vector database from `data/`.
 - `/reload` reloads `config.yaml` without restarting the bot.
 
-Admin commands require `discord.adminUserIds` or `discord.moderatorRoleIds` in `config.yaml`. `/view` autocomplete follows the same access rule when it is restricted, so non-authorized users do not see internal `data/` paths.
+Admin commands require `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS` in `.env`. `/view` autocomplete follows the same access rule when it is restricted, so non-authorized users do not see internal `data/` paths.
 
 ## Typical Workflow
 
@@ -73,6 +73,7 @@ Restart the bot instead after changing:
 
 - `.env` provider keys.
 - `BOT_TOKEN`.
+- `DISCORD_*` ID or access values.
 - Node dependencies.
 - Source code.
 

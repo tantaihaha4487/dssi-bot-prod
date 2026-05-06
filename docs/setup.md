@@ -30,34 +30,46 @@ Minimum useful values:
 
 ```env
 BOT_TOKEN=
+DISCORD_CLIENT_ID=
+DISCORD_GUILD_ID=
+DISCORD_ADMIN_USER_IDS=
+DISCORD_MODERATOR_ROLE_IDS=
 AI_PROVIDER_OPENROUTER_API_KEY=
 ```
 
-Keep secrets in `.env`. Do not put API keys in `config.yaml` or knowledge files.
+Keep secrets and Discord IDs in `.env`. Do not put API keys in `config.yaml` or knowledge files.
 
 For all built-in provider credential names, see `.env.advanced.example` and [Provider Guide](providers.md).
 
 ## Configure Discord IDs
 
-Edit `config.yaml`:
+Edit `.env`:
+
+```env
+DISCORD_CLIENT_ID=YOUR_CLIENT_ID
+DISCORD_GUILD_ID=YOUR_GUILD_ID
+DISCORD_ADMIN_USER_IDS=
+DISCORD_MODERATOR_ROLE_IDS=
+```
+
+Use comma-separated IDs for admin users or moderator roles:
+
+```env
+DISCORD_ADMIN_USER_IDS=111111111111111111,222222222222222222
+DISCORD_MODERATOR_ROLE_IDS=333333333333333333
+```
+
+Edit `config.yaml` for command-specific access:
 
 ```yaml
-discord:
-  clientId: "YOUR_CLIENT_ID"
-  guildId: "YOUR_GUILD_ID"
-  adminUserIds: []
-  moderatorRoleIds: []
-
 commands:
   view:
     allowEveryone: true
 ```
 
-Keep Discord IDs quoted. Discord snowflake IDs are larger than JavaScript's safe integer range.
+Mention-based questions and `/ping` are public. `/view` is also public while `commands.view.allowEveryone` is `true`. Set it to `false` if file viewing should require `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS`.
 
-Mention-based questions and `/ping` are public. `/view` is also public while `commands.view.allowEveryone` is `true`. Set it to `false` if file viewing should require `discord.adminUserIds` or `discord.moderatorRoleIds`.
-
-`/upload`, `/refresh`, and `/reload` always require `discord.adminUserIds` or `discord.moderatorRoleIds`. If both lists are empty, those admin commands are denied for everyone.
+`/upload`, `/refresh`, and `/reload` always require `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS`. If both lists are empty, those admin commands are denied for everyone.
 
 Enable Message Content Intent for the bot in the Discord Developer Portal so mentions like `@bot what's DSSI` include the question text.
 
@@ -86,9 +98,9 @@ More detail: [Knowledge Files](knowledge-files.md).
 npm run deploy
 ```
 
-Deploy after changing command definitions or after first setup. You do not need to redeploy when changing `data/`, `.env`, or runtime config values such as command access, provider order, models, or retrieval settings.
+Deploy after changing command definitions, after first setup, or after changing `DISCORD_CLIENT_ID` / `DISCORD_GUILD_ID`. You do not need to redeploy when changing `data/`, provider keys, command access, provider order, models, or retrieval settings.
 
-If `discord.clientId` or `discord.guildId` is empty, deploy skips command registration and prints a warning.
+If `DISCORD_CLIENT_ID` or `DISCORD_GUILD_ID` is empty, deploy skips command registration and prints a warning.
 
 ## Run With Docker Compose
 
@@ -113,7 +125,7 @@ Stop the stack:
 docker compose down
 ```
 
-Docker Compose mounts `./data`, `./.cache`, and `./config.yaml` into the bot container.
+Docker Compose reads `.env`, passes the `DISCORD_*` values to the bot service, and mounts `./data`, `./.cache`, and `./config.yaml` into the bot container.
 
 ## Run Without Docker Compose
 

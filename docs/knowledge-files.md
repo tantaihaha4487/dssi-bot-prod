@@ -57,7 +57,7 @@ Use `/refresh` after adding, editing, or deleting files outside Discord while th
 
 Behavior:
 
-- The command is restricted by `discord.adminUserIds` and `discord.moderatorRoleIds`.
+- The command is restricted by `DISCORD_ADMIN_USER_IDS` and `DISCORD_MODERATOR_ROLE_IDS`.
 - The optional folder field autocompletes existing folders.
 - A typed folder path can create a new folder under `data/`.
 - Folder paths are normalized and must stay inside `data/`.
@@ -71,7 +71,7 @@ Behavior:
 
 - The file option autocompletes matching paths under `data/`.
 - When `commands.view.allowEveryone` is `true`, every user can see suggestions and use `/view`.
-- When `commands.view.allowEveryone` is `false`, `/view` requires `discord.adminUserIds` or `discord.moderatorRoleIds`.
+- When `commands.view.allowEveryone` is `false`, `/view` requires `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS`.
 - The command validates the selected path so it stays inside `data/`.
 - Files within Discord's attachment limit are sent directly.
 - Larger files are uploaded to tmpfiles and returned as a link.
@@ -96,5 +96,6 @@ Docker Compose mounts:
 - `./data` to `/app/data`.
 - `./.cache` to `/app/.cache`.
 - `./config.yaml` to `/app/config.yaml`.
+- `.env` values into the bot service, including `DISCORD_*` settings.
 
 Because of those mounts, `/upload` writes to the host `data/` directory and image text cache survives container rebuilds.

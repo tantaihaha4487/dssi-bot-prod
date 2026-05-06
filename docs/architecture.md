@@ -103,4 +103,4 @@ Enable `retrieval.debug: true` to inspect mode, scores, sources, and chunk index
 
 `src/rag/config.js` reads and validates `.env` and `config.yaml` values. `/reload` replaces the active config without restarting for normal runtime settings.
 
-Secrets still come from process environment, so changing `.env` requires restart.
+Secrets and Discord IDs still come from process environment, so changing `.env` requires restart.

@@ -14,7 +14,7 @@ if (!BOT_TOKEN) {
 
 if (!clientId || !guildId) {
   console.warn(
-    "Skipping slash command deploy: set discord.clientId and discord.guildId in config.yaml to deploy commands.",
+    "Skipping slash command deploy: set DISCORD_CLIENT_ID and DISCORD_GUILD_ID in .env to deploy commands.",
   );
   process.exit(0);
 }

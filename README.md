@@ -40,28 +40,40 @@ Fill the required secrets in `.env`:
 
 ```env
 BOT_TOKEN=
+DISCORD_CLIENT_ID=
+DISCORD_GUILD_ID=
+DISCORD_ADMIN_USER_IDS=
+DISCORD_MODERATOR_ROLE_IDS=
 AI_PROVIDER_OPENROUTER_API_KEY=
 ```
 
-You only need one chat provider API key to start. Keep API keys in `.env`, not in `config.yaml`.
+You only need one chat provider API key to start. Keep API keys and Discord IDs in `.env`, not in `config.yaml`.
 
 ### 2. Configure Discord
 
-Edit `config.yaml`:
+Edit `.env`:
+
+```env
+DISCORD_CLIENT_ID=YOUR_CLIENT_ID
+DISCORD_GUILD_ID=YOUR_GUILD_ID
+DISCORD_ADMIN_USER_IDS=
+DISCORD_MODERATOR_ROLE_IDS=
+```
+
+Use comma-separated IDs for admin users or moderator roles if you want to use admin commands such as `/upload`, `/refresh`, and `/reload`:
+
+```env
+DISCORD_ADMIN_USER_IDS=111111111111111111,222222222222222222
+DISCORD_MODERATOR_ROLE_IDS=333333333333333333
+```
+
+Edit `config.yaml` for command-specific access:
 
 ```yaml
-discord:
-  clientId: "YOUR_CLIENT_ID"
-  guildId: "YOUR_GUILD_ID"
-  adminUserIds: []
-  moderatorRoleIds: []
-
 commands:
   view:
     allowEveryone: true
 ```
-
-Keep Discord IDs quoted. Add your user ID to `adminUserIds` or role IDs to `moderatorRoleIds` if you want to use admin commands such as `/upload`, `/refresh`, and `/reload`.
 
 `/view` is public by default. Set `commands.view.allowEveryone: false` to restrict it to the same admin users and moderator roles.
 
@@ -124,7 +136,7 @@ Public by default:
 - `/ping`.
 - `/view`, unless `commands.view.allowEveryone` is set to `false`.
 
-Restricted to `discord.adminUserIds` or `discord.moderatorRoleIds`:
+Restricted to `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS`:
 
 - `/upload`: save a knowledge file and refresh the index.
 - `/refresh`: rebuild the vector database from `data/`.
@@ -137,7 +149,7 @@ Restricted to `discord.adminUserIds` or `discord.moderatorRoleIds`:
 data/                      Knowledge files scanned recursively
 .cache/image-text/         Cached text extracted from images
 config.yaml                Non-secret app, command, provider, and retrieval config
-.env                       Local secrets, not committed
+.env                       Local secrets and Discord IDs, not committed
 src/commands/              Slash commands
 src/events/messageCreate/  Mention-based RAG question handler
 src/rag/                   Loading, retrieval, vector store, and answer flow

@@ -8,12 +8,11 @@ Related pages: [Setup Guide](setup.md), [Configuration Guide](configuration.md),
 
 ## Slash Commands Do Not Appear
 
-Check `config.yaml`:
+Check `.env`:
 
-```yaml
-discord:
-  clientId: "YOUR_CLIENT_ID"
-  guildId: "YOUR_GUILD_ID"
+```env
+DISCORD_CLIENT_ID=YOUR_CLIENT_ID
+DISCORD_GUILD_ID=YOUR_GUILD_ID
 ```
 
 Then run:
@@ -22,7 +21,7 @@ Then run:
 npm run deploy
 ```
 
-If deploy says it skipped command registration, `clientId` or `guildId` is still empty.
+If deploy says it skipped command registration, `DISCORD_CLIENT_ID` or `DISCORD_GUILD_ID` is still empty.
 
 ## Bot Does Not Start
 
@@ -42,21 +41,18 @@ docker compose logs -f bot
 
 ## Admin Commands Are Denied
 
-`/upload`, `/refresh`, and `/reload` require admin config.
+`/upload`, `/refresh`, and `/reload` require admin access config in `.env`.
 
-`/view` also requires admin config when `commands.view.allowEveryone` is `false`.
+`/view` also requires admin access config when `commands.view.allowEveryone` is `false`.
 
 Add your user ID or a moderator role ID:
 
-```yaml
-discord:
-  adminUserIds:
-    - "YOUR_DISCORD_USER_ID"
-  moderatorRoleIds:
-    - "YOUR_MODERATOR_ROLE_ID"
+```env
+DISCORD_ADMIN_USER_IDS=YOUR_DISCORD_USER_ID
+DISCORD_MODERATOR_ROLE_IDS=YOUR_MODERATOR_ROLE_ID
 ```
 
-Run `/reload` after editing `config.yaml`, or restart if reload is not currently available to you.
+Restart after editing `.env`. `/reload` does not reload environment variables.
 
 To make `/view` public again:
 
