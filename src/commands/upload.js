@@ -10,6 +10,10 @@ const {
 } = require("../rag/data-loader");
 const { canUseAdminCommand, getImageTextConfig } = require("../rag/config");
 const { isImageExtension } = require("../rag/image-text");
+const {
+  INVALID_FILENAME_CHARS,
+  normalizePathSegment,
+} = require("../rag/path-normalizer");
 const { refreshKnowledgeVectorStore } = require("../rag/vector-store");
 
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
@@ -140,7 +144,7 @@ function normalizeFolder(folder) {
     .replace(/\\/g, "/")
     .replace(/^\/+|\/+$/g, "")
     .split("/")
-    .map((part) => part.trim())
+    .map((part) => normalizePathSegment(part))
     .filter(Boolean);
 
   if (parts.length === 0 || parts.some(isInvalidFolderPart)) {
@@ -151,13 +155,13 @@ function normalizeFolder(folder) {
 }
 
 function isInvalidFolderPart(part) {
-  return part === "." || part === ".." || /[<>:"|?*\x00-\x1F]/.test(part);
+  return part === "." || part === ".." || INVALID_FILENAME_CHARS.test(part);
 }
 
 function sanitizeFilename(filename) {
-  const name = path
-    .basename(filename.replace(/\\/g, "/"))
-    .replace(/[<>:"|?*\x00-\x1F]/g, "_");
+  const name = normalizePathSegment(path.basename(filename.replace(/\\/g, "/")), {
+    replaceInvalid: true,
+  });
 
   if (!name || name === "." || name === "..") {
     throw new Error("Attachment filename is invalid.");
