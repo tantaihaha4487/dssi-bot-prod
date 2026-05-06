@@ -1,9 +1,8 @@
 const INVALID_FILENAME_CHARS = /[<>:"|?*\x00-\x1F]/;
 const INVALID_FILENAME_CHARS_GLOBAL = /[<>:"|?*\x00-\x1F]/g;
-const WHITESPACE = /\s+/g;
 
 function normalizePathSegment(segment, { replaceInvalid = false } = {}) {
-  const normalized = segment.normalize("NFC").trim().replace(WHITESPACE, " ");
+  const normalized = segment.normalize("NFC");
 
   if (!replaceInvalid) return normalized;
 
