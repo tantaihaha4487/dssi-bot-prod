@@ -69,7 +69,7 @@ commands:
 
 Mention-based questions and `/ping` are public. `/view` is also public while `commands.view.allowEveryone` is `true`. Set it to `false` if file viewing should require `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS`.
 
-Mention ask queue/progress notices are private to the requesting user. When a user asks by normal message mention, the bot uses DMs for those notices because ephemeral replies are only available on interactions.
+Mention ask queue/progress notices use a public status button. Pressing the button creates an interaction, so the bot can return an ephemeral status visible only to the requesting user.
 
 `/upload`, `/refresh`, and `/reload` always require `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS`. If both lists are empty, those admin commands are denied for everyone.
 

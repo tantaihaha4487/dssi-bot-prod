@@ -1,6 +1,10 @@
 const { createAskErrorEmbed, getAskResponseEmbeds } = require("../../utils/ask-response");
 const { MentionAskQueue } = require("../../utils/mention-ask-queue");
-const { sendPrivateStatus } = require("../../utils/private-status");
+const {
+  createMentionAskStatus,
+  createMentionAskStatusButtonRow,
+  updateMentionAskStatus,
+} = require("../../utils/mention-ask-status");
 
 const mentionAskQueue = new MentionAskQueue();
 
@@ -19,27 +23,31 @@ module.exports = async (message) => {
     return;
   }
 
+  const requestStatus = createMentionAskStatus({
+    userId: message.author.id,
+    content: createAcceptedStatus(message, question),
+  });
   const queueEntry = mentionAskQueue.enqueue(message.author.id, {
     onStart: () =>
-      notifyUserPrivately(
-        message,
-        { user: message.author },
+      updateMentionAskStatus(
+        requestStatus.id,
         createProcessingStatus(message, question),
       ),
-    run: () => respondToMentionAsk(message, question),
-    onError: (error) => handleMentionAskFailure(message, error),
+    run: () => respondToMentionAsk(message, question, requestStatus.id),
+    onError: (error) => handleMentionAskFailure(message, question, error, requestStatus.id),
   });
 
   if (queueEntry.queued) {
-    await notifyUserPrivately(
-      message,
-      { user: message.author },
+    updateMentionAskStatus(
+      requestStatus.id,
       createQueuedStatus(message, queueEntry.position, question),
     );
   }
+
+  await sendStatusButtonPrompt(message, requestStatus.id);
 };
 
-async function respondToMentionAsk(message, question) {
+async function respondToMentionAsk(message, question, statusId) {
   const embeds = await getAskResponseEmbeds(question);
   const [firstEmbed, ...restEmbeds] = embeds;
   await sendMessageFeedback(message, { embeds: [firstEmbed] });
@@ -47,10 +55,13 @@ async function respondToMentionAsk(message, question) {
   for (const embed of restEmbeds) {
     await message.channel.send({ embeds: [embed] });
   }
+
+  updateMentionAskStatus(statusId, createCompletedStatus(message, question));
 }
 
-async function handleMentionAskFailure(message, error) {
+async function handleMentionAskFailure(message, question, error, statusId) {
   console.error("Error answering RAG question from mention:", error);
+  updateMentionAskStatus(statusId, createFailedStatus(message, question));
 
   await sendMessageFeedback(message, { embeds: [createAskErrorEmbed(error)] });
 }
@@ -75,12 +86,28 @@ function getMentionQuestion(message) {
   return message.content.replace(botMention, "").trim();
 }
 
+async function sendStatusButtonPrompt(message, statusId) {
+  await sendMessageFeedback(message, {
+    content: `${message.author} your ask request was received. Use the button to view your private queue status.`,
+    components: [createMentionAskStatusButtonRow(statusId)],
+  });
+}
+
+function createAcceptedStatus(message, question) {
+  return [
+    "Your ask request was accepted.",
+    createRequestLocationText(message),
+    `Question: ${truncateQuestion(question)}`,
+    "Status: waiting for queue placement.",
+  ].join("\n");
+}
+
 function createQueuedStatus(message, position, question) {
   return [
     `Your ask request is queued at position ${position}.`,
     createRequestLocationText(message),
     `Question: ${truncateQuestion(question)}`,
-    "I will DM you again when processing starts.",
+    "Press the status button again later to refresh this private status.",
   ].join("\n");
 }
 
@@ -89,6 +116,24 @@ function createProcessingStatus(message, question) {
     "Your ask request is now processing.",
     createRequestLocationText(message),
     `Question: ${truncateQuestion(question)}`,
+  ].join("\n");
+}
+
+function createCompletedStatus(message, question) {
+  return [
+    "Your ask request is complete.",
+    createRequestLocationText(message),
+    `Question: ${truncateQuestion(question)}`,
+    "The answer was posted in the original channel.",
+  ].join("\n");
+}
+
+function createFailedStatus(message, question) {
+  return [
+    "Your ask request failed.",
+    createRequestLocationText(message),
+    `Question: ${truncateQuestion(question)}`,
+    "An error message was posted in the original channel.",
   ].join("\n");
 }
 
@@ -106,13 +151,3 @@ function truncateQuestion(question) {
   return `${question.slice(0, 177)}...`;
 }
 
-async function notifyUserPrivately(message, target, content) {
-  try {
-    await sendPrivateStatus(target, content);
-  } catch (error) {
-    console.warn(
-      `Failed to send private mention-ask status to user ${message.author.id}:`,
-      error,
-    );
-  }
-}
