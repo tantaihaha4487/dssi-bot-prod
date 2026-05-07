@@ -43,7 +43,7 @@ class MentionAskQueue {
     Promise.resolve()
       .then(() => job.handlers.onStart?.())
       .then(() => job.handlers.run())
-      .catch((error) => job.handlers.onError?.(error))
+      .catch((error) => this.handleJobError(job, error))
       .finally(() => {
         state.running = false;
 
@@ -56,6 +56,14 @@ class MentionAskQueue {
 
         this.userQueues.delete(userId);
       });
+  }
+
+  async handleJobError(job, error) {
+    try {
+      await job.handlers.onError?.(error);
+    } catch (handlerError) {
+      console.error("Mention ask error handler failed:", handlerError);
+    }
   }
 }
 
