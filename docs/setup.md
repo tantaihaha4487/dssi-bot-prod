@@ -69,6 +69,8 @@ commands:
 
 Mention-based questions and `/ping` are public. `/view` is also public while `commands.view.allowEveryone` is `true`. Set it to `false` if file viewing should require `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS`.
 
+Mention ask queue/progress notices are private to the requesting user. When a user asks by normal message mention, the bot uses DMs for those notices because ephemeral replies are only available on interactions.
+
 `/upload`, `/refresh`, and `/reload` always require `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS`. If both lists are empty, those admin commands are denied for everyone.
 
 Enable Message Content Intent for the bot in the Discord Developer Portal so mentions like `@bot what's DSSI` include the question text.
