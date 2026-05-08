@@ -33,8 +33,8 @@ module.exports = async (message) => {
         requestStatus.id,
         createProcessingStatus(message, question),
       ),
-    run: () => respondToMentionAsk(message, question, requestStatus.id),
-    onError: (error) => handleMentionAskFailure(message, question, error, requestStatus.id),
+    run: () => respondToMentionAsk(message, question, requestStatus.id, statusPrompt),
+    onError: (error) => handleMentionAskFailure(message, question, error, requestStatus.id, statusPrompt),
   });
 
   if (queueEntry.queued) {
@@ -44,10 +44,10 @@ module.exports = async (message) => {
     );
   }
 
-  await sendStatusButtonPrompt(message, requestStatus.id);
+  const statusPrompt = await sendStatusButtonPrompt(message, requestStatus.id);
 };
 
-async function respondToMentionAsk(message, question, statusId) {
+async function respondToMentionAsk(message, question, statusId, statusPrompt) {
   const embeds = await getAskResponseEmbeds(question);
   const [firstEmbed, ...restEmbeds] = embeds;
   await sendMessageFeedback(message, { embeds: [firstEmbed] });
@@ -57,13 +57,15 @@ async function respondToMentionAsk(message, question, statusId) {
   }
 
   updateMentionAskStatus(statusId, createCompletedStatus(message, question));
+  await deleteStatusPrompt(statusPrompt);
 }
 
-async function handleMentionAskFailure(message, question, error, statusId) {
+async function handleMentionAskFailure(message, question, error, statusId, statusPrompt) {
   console.error("Error answering RAG question from mention:", error);
   updateMentionAskStatus(statusId, createFailedStatus(message, question));
 
   await sendMessageFeedback(message, { embeds: [createAskErrorEmbed(error)] });
+  await deleteStatusPrompt(statusPrompt);
 }
 
 async function sendMessageFeedback(message, payload) {
@@ -87,10 +89,23 @@ function getMentionQuestion(message) {
 }
 
 async function sendStatusButtonPrompt(message, statusId) {
-  await sendMessageFeedback(message, {
+  return sendMessageFeedback(message, {
     content: `${message.author} your ask request was received. Use the button to view your private queue status.`,
     components: [createMentionAskStatusButtonRow(statusId)],
   });
+}
+
+async function deleteStatusPrompt(statusPrompt) {
+  if (!statusPrompt) return;
+
+  try {
+    await statusPrompt.delete();
+  } catch (error) {
+    if (error?.code !== 10008) {
+      // 10008 = Unknown Message (already deleted or inaccessible)
+      console.warn("Failed to delete mention ask status prompt:", error);
+    }
+  }
 }
 
 function createAcceptedStatus(message, question) {
