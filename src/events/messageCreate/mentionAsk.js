@@ -27,6 +27,9 @@ module.exports = async (message) => {
     userId: message.author.id,
     content: createAcceptedStatus(message, question),
   });
+
+  const statusPrompt = await sendStatusButtonPrompt(message, requestStatus.id);
+
   const queueEntry = mentionAskQueue.enqueue(message.author.id, {
     onStart: () =>
       updateMentionAskStatus(
@@ -43,8 +46,6 @@ module.exports = async (message) => {
       createQueuedStatus(message, queueEntry.position, question),
     );
   }
-
-  const statusPrompt = await sendStatusButtonPrompt(message, requestStatus.id);
 };
 
 async function respondToMentionAsk(message, question, statusId, statusPrompt) {
@@ -89,7 +90,7 @@ function getMentionQuestion(message) {
 }
 
 async function sendStatusButtonPrompt(message, statusId) {
-  await sendMessageFeedback(message, {
+  return sendMessageFeedback(message, {
     components: [createMentionAskStatusButtonRow(statusId)],
   });
 }
