@@ -28,16 +28,14 @@ module.exports = async (message) => {
     content: createAcceptedStatus(message, question),
   });
 
-  const statusPrompt = await sendStatusButtonPrompt(message, requestStatus.id);
+  const statusPrompt = await sendStatusButtonPrompt(message, requestStatus.id, question);
+
+  const { onStart, run, onError } = createQueueHandlers(
+    message, question, requestStatus, statusPrompt,
+  );
 
   const queueEntry = mentionAskQueue.enqueue(message.author.id, {
-    onStart: () =>
-      updateMentionAskStatus(
-        requestStatus.id,
-        createProcessingStatus(message, question),
-      ),
-    run: () => respondToMentionAsk(message, question, requestStatus.id, statusPrompt),
-    onError: (error) => handleMentionAskFailure(message, question, error, requestStatus.id, statusPrompt),
+    onStart, run, onError,
   });
 
   if (queueEntry.queued) {
@@ -48,8 +46,10 @@ module.exports = async (message) => {
   }
 };
 
-async function respondToMentionAsk(message, question, statusId, statusPrompt) {
+async function respondToMentionAsk(message, question, statusId, statusPrompt, context) {
   const embeds = await getAskResponseEmbeds(question);
+
+  stopTypingIndicator(context.typingInterval);
   const [firstEmbed, ...restEmbeds] = embeds;
   await sendMessageFeedback(message, { embeds: [firstEmbed] });
 
@@ -61,12 +61,26 @@ async function respondToMentionAsk(message, question, statusId, statusPrompt) {
   await deleteStatusPrompt(statusPrompt);
 }
 
-async function handleMentionAskFailure(message, question, error, statusId, statusPrompt) {
+async function handleMentionAskFailure(message, question, error, statusId, statusPrompt, context) {
+  stopTypingIndicator(context.typingInterval);
+
   console.error("Error answering RAG question from mention:", error);
   updateMentionAskStatus(statusId, createFailedStatus(message, question));
 
   await sendMessageFeedback(message, { embeds: [createAskErrorEmbed(error)] });
   await deleteStatusPrompt(statusPrompt);
+}
+
+function startTypingIndicator(channel) {
+  channel.sendTyping().catch(() => {});
+
+  return setInterval(() => {
+    channel.sendTyping().catch(() => {});
+  }, 8000);
+}
+
+function stopTypingIndicator(intervalId) {
+  clearInterval(intervalId);
 }
 
 async function sendMessageFeedback(message, payload) {
@@ -89,8 +103,9 @@ function getMentionQuestion(message) {
   return message.content.replace(botMention, "").trim();
 }
 
-async function sendStatusButtonPrompt(message, statusId) {
+async function sendStatusButtonPrompt(message, statusId, question) {
   return sendMessageFeedback(message, {
+    content: createThinkingMessageText(message, question),
     components: [createMentionAskStatusButtonRow(statusId)],
   });
 }
@@ -102,10 +117,32 @@ async function deleteStatusPrompt(statusPrompt) {
     await statusPrompt.delete();
   } catch (error) {
     if (error?.code !== 10008) {
-      // 10008 = Unknown Message (already deleted or inaccessible)
       console.warn("Failed to delete mention ask status prompt:", error);
     }
   }
+}
+
+function createThinkingMessageText(message, question) {
+  return `${message.client.user.username} is thinking about your question.`;
+}
+
+function createQueueHandlers(message, question, requestStatus, statusPrompt) {
+  const context = { typingInterval: null };
+
+  return {
+    onStart: async () => {
+      updateMentionAskStatus(
+        requestStatus.id,
+        createProcessingStatus(message, question),
+      );
+
+      context.typingInterval = startTypingIndicator(message.channel);
+    },
+    run: () =>
+      respondToMentionAsk(message, question, requestStatus.id, statusPrompt, context),
+    onError: (error) =>
+      handleMentionAskFailure(message, question, error, requestStatus.id, statusPrompt, context),
+  };
 }
 
 function createAcceptedStatus(message, question) {
@@ -165,4 +202,3 @@ function truncateQuestion(question) {
 
   return `${question.slice(0, 177)}...`;
 }
-
