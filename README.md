@@ -17,6 +17,7 @@ Detailed guides live in [`docs/`](docs/README.md):
 ## Features
 
 - Mention-based RAG answers, for example `@bot what is this program about?`.
+- Mention asks are queued per user, with an ephemeral status button so only the requester can view queue/progress details.
 - Slash commands: `/ping`, `/upload`, `/view`, `/refresh`, and `/reload`.
 - Recursive `data/` knowledge loading for `.txt`, `.pdf`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.heic`, and `.heif`.
 - `/upload` can save supported Discord attachments into `data/` and refresh the index automatically.
@@ -133,6 +134,7 @@ See [Setup](docs/setup.md) for the full non-Compose path.
 Public by default:
 
 - Mention questions, for example `@bot what is DSSI?`.
+  Mention request queue/progress updates are shown through a public status button; pressing it returns an ephemeral status visible only to the requesting user.
 - `/ping`.
 - `/view`, unless `commands.view.allowEveryone` is set to `false`.
 
