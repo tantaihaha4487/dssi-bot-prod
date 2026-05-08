@@ -31,10 +31,9 @@ module.exports = {
 
       const client = interaction.client;
 
-      // Graceful disconnect: destroy the WebSocket connection and clear caches.
-      // This follows the discord.js recommended approach for a soft restart
-      // without killing the Node.js process.
-      client.destroy();
+      // Graceful disconnect: destroy() is async — must await so the WebSocket
+      // teardown completes before we call login(), preventing race conditions.
+      await client.destroy();
 
       // Re-login to re-establish the connection.
       // The ClientReady event will fire again when the bot is back online.
