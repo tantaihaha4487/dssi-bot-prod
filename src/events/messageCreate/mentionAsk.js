@@ -89,8 +89,7 @@ function getMentionQuestion(message) {
 }
 
 async function sendStatusButtonPrompt(message, statusId) {
-  return sendMessageFeedback(message, {
-    content: `${message.author} your ask request was received. Use the button to view your private queue status.`,
+  await sendMessageFeedback(message, {
     components: [createMentionAskStatusButtonRow(statusId)],
   });
 }
