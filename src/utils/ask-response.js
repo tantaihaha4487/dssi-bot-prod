@@ -2,7 +2,7 @@ const { EmbedBuilder, escapeMarkdown } = require("discord.js");
 const { askKnowledgeBase } = require("../rag/service");
 
 const MESSAGE_CHUNK_LENGTH = 3000;
-const MISINFORMATION_NOTICE = "AI might contain misinformation.";
+const MISINFORMATION_NOTICE = "⚠️ AI อาจมีข้อมูลไม่ถูกต้อง";
 
 async function getAskResponseEmbeds(question) {
   const result = await askKnowledgeBase(question);
