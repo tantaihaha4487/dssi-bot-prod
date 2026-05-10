@@ -1,3 +1,4 @@
+const { MessageFlags } = require("discord.js");
 const {
   getMentionAskStatus,
   parseMentionAskStatusButtonId,
@@ -14,7 +15,7 @@ module.exports = async (interaction) => {
   if (!status) {
     await interaction.reply({
       content: "This queue status has expired. Ask again if you need a fresh status.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -22,13 +23,13 @@ module.exports = async (interaction) => {
   if (interaction.user.id !== status.userId) {
     await interaction.reply({
       content: "This queue status belongs to another user.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   await interaction.reply({
     content: status.content,
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 };
