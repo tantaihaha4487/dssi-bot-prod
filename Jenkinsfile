@@ -54,12 +54,19 @@ pipeline {
                         echo "=== Building bot image ==="
                         docker build --no-cache -t dssi-bot-bot:latest .
 
+                        echo "=== Tearing down existing stack (removes stale networks) ==="
+                        docker compose \
+                            -p "${PROJECT_NAME}" \
+                            -f "${COMPOSE_FILE}" \
+                            -f "${OVERRIDE_FILE}" \
+                            down --remove-orphans || true
+
                         echo "=== Starting stack ==="
                         docker compose \
                             -p "${PROJECT_NAME}" \
                             -f "${COMPOSE_FILE}" \
                             -f "${OVERRIDE_FILE}" \
-                            up -d --remove-orphans
+                            up -d
                     '''
                 }
             }
