@@ -7,6 +7,6 @@ RUN npm ci --omit=dev
 
 COPY config.yaml ./config.yaml
 COPY src ./src
-COPY data ./data
+RUN mkdir -p /app/data
 
 CMD ["npm", "start"]
