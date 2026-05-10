@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { AttachmentBuilder, EmbedBuilder } = require("discord.js");
+const { AttachmentBuilder, EmbedBuilder, MessageFlags } = require("discord.js");
 const { File } = require("node:buffer");
 const { readFile, realpath, stat } = require("node:fs/promises");
 const path = require("node:path");
@@ -150,7 +150,7 @@ function getTmpfilesUrl(result) {
 async function replyNotAllowed(interaction) {
   await interaction.reply({
     content: `Only users listed in \`DISCORD_ADMIN_USER_IDS\`, members with \`DISCORD_MODERATOR_ROLE_IDS\`, or everyone when \`commands.view.allowEveryone\` is enabled can use this command. Your user ID is \`${interaction.user.id}\`.`,
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 
