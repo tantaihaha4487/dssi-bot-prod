@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, MessageFlags } = require("discord.js");
 const { canUseAdminCommand } = require("../rag/config");
 
 module.exports = {
@@ -11,12 +11,12 @@ module.exports = {
     if (!canUseAdminCommand(interaction)) {
       await interaction.reply({
         content: `Only users listed in \`DISCORD_ADMIN_USER_IDS\` or members with \`DISCORD_MODERATOR_ROLE_IDS\` can use this command. Your user ID is \`${interaction.user.id}\`.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
       await interaction.editReply({

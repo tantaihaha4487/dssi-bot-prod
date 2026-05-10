@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, MessageFlags } = require("discord.js");
 const { mkdir, writeFile } = require("node:fs/promises");
 const path = require("node:path");
 const {
@@ -61,7 +61,7 @@ module.exports = {
     const attachment = interaction.options.getAttachment("file", true);
     const folder = interaction.options.getString("folder") ?? "";
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
       const target = getUploadTarget(attachment.name, folder);
@@ -226,7 +226,7 @@ function createErrorEmbed(error) {
 async function replyNotAllowed(interaction) {
   await interaction.reply({
     content: `Only users listed in \`DISCORD_ADMIN_USER_IDS\` or members with \`DISCORD_MODERATOR_ROLE_IDS\` can use this command. Your user ID is \`${interaction.user.id}\`.`,
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 

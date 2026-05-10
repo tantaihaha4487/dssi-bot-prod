@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, MessageFlags } = require("discord.js");
 
 module.exports = async (interaction) => {
   if (!interaction.isChatInputCommand() && !interaction.isAutocomplete()) return;
@@ -37,7 +37,7 @@ async function replyCommandFailure(interaction) {
         .setTitle("Command Failed")
         .setDescription("There was an error while executing this command."),
     ],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   };
 
   try {
