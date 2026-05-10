@@ -67,33 +67,39 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                dir("${BOT_WORK_DIR}") {        // ← add dir block so -f paths resolve
+                dir("${BOT_WORK_DIR}") {
                     sh '''
-                        echo "=== Waiting 20s for containers to settle ==="
-                        sleep 20
-                        echo "=== Container status ==="
+                        echo "=== Waiting for bot container to become healthy (up to 10 min) ==="
+                        MAX_WAIT=600
+                        INTERVAL=10
+                        ELAPSED=0
+
+                        while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+                            STATUS=$(docker compose \
+                                -p "${PROJECT_NAME}" \
+                                -f "${COMPOSE_FILE}" \
+                                -f "${OVERRIDE_FILE}" \
+                                ps --format json bot 2>/dev/null \
+                                | grep -o '"State":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+                            echo "  [${ELAPSED}s] bot status: ${STATUS:-<unknown>}"
+
+                            if [ "$STATUS" = "running" ]; then
+                                echo "Bot is running."
+                                exit 0
+                            fi
+
+                            sleep "$INTERVAL"
+                            ELAPSED=$((ELAPSED + INTERVAL))
+                        done
+
+                        echo "ERROR: bot did not reach 'running' state within ${MAX_WAIT}s"
                         docker compose \
                             -p "${PROJECT_NAME}" \
                             -f "${COMPOSE_FILE}" \
                             -f "${OVERRIDE_FILE}" \
-                            ps
-                        echo "=== Checking bot container is running ==="
-                        STATUS=$(docker compose \
-                            -p "${PROJECT_NAME}" \
-                            -f "${COMPOSE_FILE}" \
-                            -f "${OVERRIDE_FILE}" \
-                            ps --format json bot \
-                            | grep -o '"State":"[^"]*"' | head -1 | cut -d'"' -f4)
-                        if [ "$STATUS" != "running" ]; then
-                            echo "ERROR: bot container is not running (status: $STATUS)"
-                            docker compose \
-                                -p "${PROJECT_NAME}" \
-                                -f "${COMPOSE_FILE}" \
-                                -f "${OVERRIDE_FILE}" \
-                                logs --tail=50 bot
-                            exit 1
-                        fi
-                        echo "Bot is running."
+                            logs --tail=50 bot
+                        exit 1
                     '''
                 }
             }
@@ -106,13 +112,15 @@ pipeline {
         }
         failure {
             echo "❌ Deploy failed. Printing recent logs..."
-            sh '''
-                docker compose \
-                    -p "${PROJECT_NAME}" \
-                    -f "${COMPOSE_FILE}" \
-                    -f "${OVERRIDE_FILE}" \
-                    logs --tail=100 || true
-            '''
+            dir("${BOT_WORK_DIR}") {
+                sh '''
+                    docker compose \
+                        -p "${PROJECT_NAME}" \
+                        -f "${COMPOSE_FILE}" \
+                        -f "${OVERRIDE_FILE}" \
+                        logs --tail=100 || true
+                '''
+            }
         }
     }
 }
