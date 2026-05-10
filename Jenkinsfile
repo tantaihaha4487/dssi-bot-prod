@@ -69,24 +69,40 @@ pipeline {
             steps {
                 dir("${BOT_WORK_DIR}") {
                     sh '''
-                        echo "=== Waiting for bot container to become healthy (up to 10 min) ==="
+                        echo "=== Waiting for bot container to become running (up to 10 min) ==="
                         MAX_WAIT=600
                         INTERVAL=10
                         ELAPSED=0
 
                         while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-                            STATUS=$(docker compose \
+                            # Resolve the actual container ID for this compose project+service
+                            CONTAINER_ID=$(docker compose \
                                 -p "${PROJECT_NAME}" \
                                 -f "${COMPOSE_FILE}" \
                                 -f "${OVERRIDE_FILE}" \
-                                ps --format json bot 2>/dev/null \
-                                | grep -o '"State":"[^"]*"' | head -1 | cut -d'"' -f4)
+                                ps -q bot 2>/dev/null | head -1)
+
+                            if [ -n "$CONTAINER_ID" ]; then
+                                # docker inspect --format is stable across all Docker versions
+                                STATUS=$(docker inspect \
+                                    --format "{{.State.Status}}" \
+                                    "$CONTAINER_ID" 2>/dev/null || true)
+                            else
+                                STATUS="<not created>"
+                            fi
 
                             echo "  [${ELAPSED}s] bot status: ${STATUS:-<unknown>}"
 
                             if [ "$STATUS" = "running" ]; then
                                 echo "Bot is running."
                                 exit 0
+                            fi
+
+                            # Bail early if container has exited/died — it won't recover on its own
+                            if [ "$STATUS" = "exited" ] || [ "$STATUS" = "dead" ]; then
+                                echo "ERROR: bot container stopped unexpectedly (status: $STATUS)"
+                                docker logs --tail=50 "$CONTAINER_ID" || true
+                                exit 1
                             fi
 
                             sleep "$INTERVAL"
