@@ -1,13 +1,11 @@
 pipeline {
     agent any
 
-    // ─── Poll GitHub every 5 minutes ─────────────────────────────────────────
     triggers {
         pollSCM('H/5 * * * *')
     }
 
     environment {
-        // Host-absolute path (= /workspace/dssi-bot inside this container)
         HOST_BOT_PATH  = '/mnt/home/AppData/Apps/dssi-bot'
         BOT_WORK_DIR   = '/workspace/dssi-bot'
         COMPOSE_FILE   = '/workspace/dssi-bot/docker-compose.yml'
@@ -17,25 +15,22 @@ pipeline {
 
     stages {
 
-        // ── 1. Pull latest code ───────────────────────────────────────────────
         stage('Checkout') {
             steps {
                 dir("${BOT_WORK_DIR}") {
-                    checkout scm   // reuses the Git config already set in this Jenkins job
+                    checkout scm
                 }
             }
         }
 
-        // ── 2. Verify required manual files exist ────────────────────────────
         stage('Pre-flight Check') {
             steps {
                 dir("${BOT_WORK_DIR}") {
                     sh '''
                         echo "=== Checking required manual files ==="
-                        for f in .env config.yaml docker-compose.override.yml; do
+                        for f in .env docker-compose.override.yml; do
                             if [ ! -f "$f" ]; then
                                 echo "ERROR: Missing required file: $f"
-                                echo "Place it at ${HOST_BOT_PATH}/$f on the TrueNAS host."
                                 exit 1
                             fi
                         done
@@ -45,24 +40,19 @@ pipeline {
             }
         }
 
-        // ── 3. Build + deploy ─────────────────────────────────────────────────
         stage('Deploy') {
             steps {
                 dir("${BOT_WORK_DIR}") {
                     sh '''
-                        echo "=== Pulling latest images ==="
+                        echo "=== Pulling latest base images ==="
                         docker compose \
                             -p "${PROJECT_NAME}" \
                             -f "${COMPOSE_FILE}" \
                             -f "${OVERRIDE_FILE}" \
-                            pull --ignore-pull-failures
+                            pull --ignore-pull-failures qdrant ollama
 
                         echo "=== Building bot image ==="
-                        docker compose \
-                            -p "${PROJECT_NAME}" \
-                            -f "${COMPOSE_FILE}" \
-                            -f "${OVERRIDE_FILE}" \
-                            build --no-cache bot
+                        docker build --no-cache -t dssi-bot-bot:latest .
 
                         echo "=== Starting stack ==="
                         docker compose \
@@ -75,7 +65,6 @@ pipeline {
             }
         }
 
-        // ── 4. Smoke test ─────────────────────────────────────────────────────
         stage('Health Check') {
             steps {
                 sh '''
