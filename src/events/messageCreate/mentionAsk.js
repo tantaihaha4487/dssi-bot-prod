@@ -18,7 +18,7 @@ module.exports = async (message) => {
   if (!question) {
     await sendMessageFeedback(
       message,
-      `Mention me with a question, for example: ${message.client.user} what's DSSI`,
+      `พูดคุยกับ bot โดย mention ตามด้วยคำถาม เช่น: ${message.client.user} DSSI คืออะไร`,
     );
     return;
   }
@@ -123,7 +123,7 @@ async function deleteStatusPrompt(statusPrompt) {
 }
 
 function createThinkingMessageText(message, question) {
-  return `${message.client.user.username} is thinking about your question.`;
+  return `${message.client.user.username} กำลังคิดคำตอบให้คุณ...`;
 }
 
 function createQueueHandlers(message, question, requestStatus, statusPrompt) {
@@ -147,45 +147,45 @@ function createQueueHandlers(message, question, requestStatus, statusPrompt) {
 
 function createAcceptedStatus(message, question) {
   return [
-    "Your ask request was accepted.",
+    "คำขอของคุณถูกรับแล้ว",
     createRequestLocationText(message),
-    `Question: ${truncateQuestion(question)}`,
-    "Status: waiting for queue placement.",
+    `คำถาม: ${truncateQuestion(question)}`,
+    "สถานะ: รอเข้าคิว",
   ].join("\n");
 }
 
 function createQueuedStatus(message, position, question) {
   return [
-    `Your ask request is queued at position ${position}.`,
+    `คำขอของคุณอยู่ในคิวตำแหน่งที่ ${position}`,
     createRequestLocationText(message),
-    `Question: ${truncateQuestion(question)}`,
-    "Press the status button again later to refresh this private status.",
+    `คำถาม: ${truncateQuestion(question)}`,
+    "กดปุ่มสถานะอีกครั้งเพื่อดูสถานะล่าสุด",
   ].join("\n");
 }
 
 function createProcessingStatus(message, question) {
   return [
-    "Your ask request is now processing.",
+    "คำขอของคุณกำลังดำเนินการ",
     createRequestLocationText(message),
-    `Question: ${truncateQuestion(question)}`,
+    `คำถาม: ${truncateQuestion(question)}`,
   ].join("\n");
 }
 
 function createCompletedStatus(message, question) {
   return [
-    "Your ask request is complete.",
+    "คำขอของคุณเสร็จสิ้นแล้ว",
     createRequestLocationText(message),
-    `Question: ${truncateQuestion(question)}`,
-    "The answer was posted in the original channel.",
+    `คำถาม: ${truncateQuestion(question)}`,
+    "คำตอบถูกโพสต์ในห้องแชทต้นทาง",
   ].join("\n");
 }
 
 function createFailedStatus(message, question) {
   return [
-    "Your ask request failed.",
+    "คำขอของคุณล้มเหลว",
     createRequestLocationText(message),
-    `Question: ${truncateQuestion(question)}`,
-    "An error message was posted in the original channel.",
+    `คำถาม: ${truncateQuestion(question)}`,
+    "ข้อความแสดงข้อผิดพลาดถูกโพสต์ในห้องแชทต้นทาง",
   ].join("\n");
 }
 
