@@ -67,20 +67,35 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                sh '''
-                    echo "=== Waiting 20s for containers to settle ==="
-                    sleep 20
-                    echo "=== Container status ==="
-                    docker compose -p "${PROJECT_NAME}" ps
-                    echo "=== Checking bot container is running ==="
-                    STATUS=$(docker inspect --format="{{.State.Status}}" dssi-bot-bot-1 2>/dev/null || echo "missing")
-                    if [ "$STATUS" != "running" ]; then
-                        echo "ERROR: bot container is not running (status: $STATUS)"
-                        docker compose -p "${PROJECT_NAME}" logs --tail=50 bot
-                        exit 1
-                    fi
-                    echo "Bot is running."
-                '''
+                dir("${BOT_WORK_DIR}") {        // ← add dir block so -f paths resolve
+                    sh '''
+                        echo "=== Waiting 20s for containers to settle ==="
+                        sleep 20
+                        echo "=== Container status ==="
+                        docker compose \
+                            -p "${PROJECT_NAME}" \
+                            -f "${COMPOSE_FILE}" \
+                            -f "${OVERRIDE_FILE}" \
+                            ps
+                        echo "=== Checking bot container is running ==="
+                        STATUS=$(docker compose \
+                            -p "${PROJECT_NAME}" \
+                            -f "${COMPOSE_FILE}" \
+                            -f "${OVERRIDE_FILE}" \
+                            ps --format json bot \
+                            | grep -o '"State":"[^"]*"' | head -1 | cut -d'"' -f4)
+                        if [ "$STATUS" != "running" ]; then
+                            echo "ERROR: bot container is not running (status: $STATUS)"
+                            docker compose \
+                                -p "${PROJECT_NAME}" \
+                                -f "${COMPOSE_FILE}" \
+                                -f "${OVERRIDE_FILE}" \
+                                logs --tail=50 bot
+                            exit 1
+                        fi
+                        echo "Bot is running."
+                    '''
+                }
             }
         }
     }
