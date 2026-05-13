@@ -16,7 +16,7 @@ const { refreshKnowledgeVectorStore } = require("../rag/vector-store");
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 const MAX_FOLDER_CHOICES = 25;
 
-module.exports = {
+const uploadCommand = {
   data: new SlashCommandBuilder()
     .setName("upload")
     .setDescription("Upload a knowledge file and refresh the RAG index")
@@ -42,12 +42,16 @@ module.exports = {
     const focused = interaction.options.getFocused().trim().toLowerCase();
     const folders = [".", ...(await listDataFolders())];
     const choices = folders
-      .filter((folder) => folder.toLowerCase().includes(focused))
-      .slice(0, MAX_FOLDER_CHOICES)
       .map((folder) => ({
-        name: folder === "." ? "data/" : `data/${folder}/`,
+        name: folder,
         value: folder,
-      }));
+      }))
+      .filter(
+        (choice) =>
+          choice.name.toLowerCase().includes(focused) ||
+          choice.value.toLowerCase().includes(focused),
+      )
+      .slice(0, MAX_FOLDER_CHOICES);
 
     await interaction.respond(choices);
   },
@@ -85,6 +89,9 @@ module.exports = {
     }
   },
 };
+
+module.exports = uploadCommand;
+module.exports._test = { getUploadTarget, normalizeFolder };
 
 function validateAttachment(attachment, extension) {
   if (!supportedExtensions.has(extension)) {
@@ -134,16 +141,23 @@ function getUploadTarget(filename, folder) {
 }
 
 function normalizeFolder(folder) {
-  if (!folder.trim() || folder === ".") return "";
-
   const parts = folder
+    .trim()
     .normalize("NFC")
     .replace(/\\/g, "/")
     .replace(/^\/+|\/+$/g, "")
     .split("/")
     .filter(Boolean);
 
-  if (parts.length === 0 || parts.some(isInvalidFolderPart)) {
+  if (parts.length === 1 && parts[0] === ".") return "";
+
+  if (parts[0]?.toLowerCase() === "data") {
+    parts.shift();
+  }
+
+  if (parts.length === 0) return "";
+
+  if (parts.some(isInvalidFolderPart)) {
     throw new Error("Folder must be a relative path under `data/`.");
   }
 
