@@ -11,6 +11,7 @@ pipeline {
         COMPOSE_FILE   = '/workspace/dssi-bot/docker-compose.yml'
         OVERRIDE_FILE  = '/workspace/dssi-bot/docker-compose.override.yml'
         PROJECT_NAME   = 'dssi-bot'
+        REPO_URL       = 'https://github.com/tantaihaha4487/dssi-bot-prod'
     }
 
     stages {
@@ -18,7 +19,35 @@ pipeline {
         stage('Checkout') {
             steps {
                 dir("${BOT_WORK_DIR}") {
-                    checkout scm
+                    sh '''
+                        echo "=== Initialising git repo if needed ==="
+                        if [ ! -d .git ]; then
+                            git init
+                            git remote add origin "${REPO_URL}"
+                        fi
+
+                        # Make sure the remote URL is correct (idempotent)
+                        git remote set-url origin "${REPO_URL}"
+
+                        echo "=== Fetching latest from origin/main ==="
+                        git fetch --tags --force origin main
+
+                        echo "=== Resetting to origin/main (keeps untracked files) ==="
+                        git reset --hard origin/main
+
+                        echo "=== Cleaning untracked/ignored files, preserving /data and manual config ==="
+                        # -f  force
+                        # -d  remove untracked directories
+                        # -x  also remove git-ignored files (node_modules, caches, etc.)
+                        # --exclude keeps the listed paths even with -x
+                        git clean -fdx \
+                            --exclude=data/ \
+                            --exclude=.env \
+                            --exclude=docker-compose.override.yml
+
+                        echo "=== Checkout complete. Current HEAD ==="
+                        git log -1 --oneline
+                    '''
                 }
             }
         }
@@ -82,7 +111,6 @@ pipeline {
                         ELAPSED=0
 
                         while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-                            # Resolve the actual container ID for this compose project+service
                             CONTAINER_ID=$(docker compose \
                                 -p "${PROJECT_NAME}" \
                                 -f "${COMPOSE_FILE}" \
@@ -90,7 +118,6 @@ pipeline {
                                 ps -q bot 2>/dev/null | head -1)
 
                             if [ -n "$CONTAINER_ID" ]; then
-                                # docker inspect --format is stable across all Docker versions
                                 STATUS=$(docker inspect \
                                     --format "{{.State.Status}}" \
                                     "$CONTAINER_ID" 2>/dev/null || true)
@@ -105,7 +132,6 @@ pipeline {
                                 exit 0
                             fi
 
-                            # Bail early if container has exited/died — it won't recover on its own
                             if [ "$STATUS" = "exited" ] || [ "$STATUS" = "dead" ]; then
                                 echo "ERROR: bot container stopped unexpectedly (status: $STATUS)"
                                 docker logs --tail=50 "$CONTAINER_ID" || true
