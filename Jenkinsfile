@@ -26,11 +26,14 @@ pipeline {
                         echo "=== Initialising git repo if needed ==="
                         if [ ! -d .git ]; then
                             git init
-                            git remote add origin "${REPO_URL}"
                         fi
 
-                        # Make sure the remote URL is correct (idempotent)
-                        git remote set-url origin "${REPO_URL}"
+                        # Add remote if missing, otherwise update URL (handles partial-init state)
+                        if git remote get-url origin > /dev/null 2>&1; then
+                            git remote set-url origin "${REPO_URL}"
+                        else
+                            git remote add origin "${REPO_URL}"
+                        fi
 
                         echo "=== Fetching latest from origin/main ==="
                         git fetch --tags --force origin main
