@@ -20,6 +20,9 @@ pipeline {
             steps {
                 dir("${BOT_WORK_DIR}") {
                     sh '''
+                        echo "=== Marking workspace as safe for git ==="
+                        git config --global --add safe.directory "${BOT_WORK_DIR}"
+
                         echo "=== Initialising git repo if needed ==="
                         if [ ! -d .git ]; then
                             git init
