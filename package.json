@@ -20,6 +20,7 @@
     "typescript": "^5"
   },
   "scripts": {
+    "test": "node --test",
     "start": "node src/index.js",
     "deploy": "node src/utils/deploy.js"
   }
