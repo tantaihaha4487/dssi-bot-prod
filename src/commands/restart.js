@@ -5,7 +5,7 @@ const { canUseAdminCommand } = require("../rag/config");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("restart")
-    .setDescription("Restart the bot connection without killing the process"),
+    .setDescription("Restart the bot process and let Docker bring it back"),
 
   async execute(interaction) {
     if (!canUseAdminCommand(interaction)) {
@@ -24,27 +24,18 @@ module.exports = {
           new EmbedBuilder()
             .setTitle("Restarting...")
             .setDescription(
-              "Disconnecting from Discord and reconnecting. The bot will be back in a few seconds.",
+              "Stopping the bot process. Docker will start it again in a few seconds.",
             ),
         ],
       });
 
-      const client = interaction.client;
-
-      // Graceful disconnect: destroy() is async — must await so the WebSocket
-      // teardown completes before we call login(), preventing race conditions.
-      await client.destroy();
-
-      // Re-login to re-establish the connection.
-      // The ClientReady event will fire again when the bot is back online.
-      await client.login(process.env.BOT_TOKEN);
-
-      console.log("Bot restarted successfully via /restart command.");
+      setTimeout(() => {
+        console.log("Restarting bot process via /restart command.");
+        process.exit(0);
+      }, 1000).unref();
     } catch (error) {
       console.error("Error during restart:", error);
 
-      // Attempt to reply even after destroy; interaction may still be valid
-      // for a short window after destroy, but catch if it fails.
       try {
         await interaction.editReply({
           embeds: [
@@ -53,10 +44,10 @@ module.exports = {
               .setDescription(
                 error.message || "Could not restart the bot connection.",
               ),
-          ],
+            ],
         });
       } catch {
-        // Interaction token may have expired after destroy; log only.
+        // Interaction token may already be gone
       }
     }
   },
