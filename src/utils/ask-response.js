@@ -5,10 +5,19 @@ const MESSAGE_CHUNK_LENGTH = 3000;
 const MISINFORMATION_NOTICE = "⚠️ AI อาจมีข้อมูลไม่ถูกต้อง";
 
 async function getAskResponseEmbeds(question) {
+  const response = await getAskResponse(question);
+
+  return response.embeds;
+}
+
+async function getAskResponse(question) {
   const result = await askKnowledgeBase(question);
   const response = formatResponse(result);
 
-  return chunkMessage(response, MESSAGE_CHUNK_LENGTH).map(createResponseEmbed);
+  return {
+    embeds: chunkMessage(response, MESSAGE_CHUNK_LENGTH).map(createResponseEmbed),
+    sources: result.sources,
+  };
 }
 
 function createAskErrorEmbed(error) {
@@ -78,4 +87,4 @@ function getUserFacingError(error) {
   return "There was an error while answering your question.";
 }
 
-module.exports = { createAskErrorEmbed, getAskResponseEmbeds };
+module.exports = { createAskErrorEmbed, getAskResponse, getAskResponseEmbeds };

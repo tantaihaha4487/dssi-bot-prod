@@ -309,6 +309,19 @@ function getViewCommandConfig() {
   };
 }
 
+function getAskCommandConfig() {
+  const commands = getObject(getAppConfig().commands, "commands");
+  const ask = getObject(commands.ask, "commands.ask");
+
+  return {
+    topSourceButton: getBoolean(
+      ask.topSourceButton,
+      true,
+      "commands.ask.topSourceButton",
+    ),
+  };
+}
+
 function isAdminUser(userId) {
   return getDiscordConfig().adminUserIds.includes(userId);
 }
@@ -394,6 +407,7 @@ function validateLoadedConfig() {
   getImageTextConfig();
   getQdrantConfig();
   getRetrievalConfig();
+  getAskCommandConfig();
 }
 
 function getProviderEnv(id, key) {
@@ -553,6 +567,7 @@ module.exports = {
   canUseAdminCommand,
   canUseViewCommand,
   getConfiguredProviders,
+  getAskCommandConfig,
   getDiscordConfig,
   getDiscordConfigFrom,
   getEmbeddingProviderConfig,

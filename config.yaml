@@ -1,4 +1,6 @@
 commands:
+  ask:
+    topSourceButton: true
   view:
     allowEveryone: true
 

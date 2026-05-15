@@ -36,9 +36,16 @@ Command-specific access settings live under `commands`:
 
 ```yaml
 commands:
+  ask:
+    topSourceButton: true
   view:
     allowEveryone: true
 ```
+
+`commands.ask.topSourceButton` controls mention-based ask replies:
+
+- `true`: when an answer has a resolvable source file, add a button that lets anyone request the top source file as an ephemeral reply.
+- `false`: show only the text answer and source list.
 
 `commands.view.allowEveryone` controls `/view`:
 
@@ -54,6 +61,7 @@ Use `/reload` after editing `config.yaml` to reload normal runtime settings with
 Reload applies these settings:
 
 - Command access settings.
+- Ask source button settings.
 - Chat provider order and provider model settings.
 - Qdrant target settings.
 - Embedding provider settings.
