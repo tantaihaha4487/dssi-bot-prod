@@ -48,6 +48,7 @@ pipeline {
                         # --exclude keeps the listed paths even with -x
                         git clean -fdx \
                             --exclude=data/ \
+                            --exclude=.cache/ \
                             --exclude=.env \
                             --exclude=docker-compose.override.yml
 
