@@ -55,7 +55,7 @@ module.exports = {
       const target = await getDataFileTarget(selectedFile);
       const reply = await createDataFileReply(target, interaction.attachmentSizeLimit);
 
-      await interaction.editReply(reply);
+      await interaction.editReply(reply.payload);
     } catch (error) {
       console.error("Error viewing knowledge file:", error);
 

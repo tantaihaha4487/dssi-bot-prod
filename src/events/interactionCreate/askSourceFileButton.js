@@ -27,10 +27,19 @@ module.exports = async (interaction) => {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
+    if (request.cachedTmpfilesPayload) {
+      await interaction.editReply(request.cachedTmpfilesPayload);
+      return;
+    }
+
     const target = await getDataFileTarget(request.source.relativePath);
     const reply = await createDataFileReply(target, interaction.attachmentSizeLimit);
 
-    await interaction.editReply(reply);
+    if (reply.deliveryKind === "tmpfiles") {
+      request.cachedTmpfilesPayload = reply.payload;
+    }
+
+    await interaction.editReply(reply.payload);
   } catch (error) {
     console.error("Error sending ask source file:", error);
 

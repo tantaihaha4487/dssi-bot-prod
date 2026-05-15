@@ -36,15 +36,21 @@ async function createDataFileReply(target, attachmentSizeLimit) {
 
   if (fileStats.size <= sizeLimit) {
     return {
-      content: `Sending \`${target.relativePath}\` (${formatBytes(fileStats.size)}).`,
-      files: [new AttachmentBuilder(target.filePath)],
+      payload: {
+        content: `Sending \`${target.relativePath}\` (${formatBytes(fileStats.size)}).`,
+        files: [new AttachmentBuilder(target.filePath)],
+      },
+      deliveryKind: "attachment",
     };
   }
 
   const url = await uploadToTmpfiles(target.filePath);
 
   return {
-    content: `\`${target.relativePath}\` is too large for Discord (${formatBytes(fileStats.size)}).\n${url}`,
+    payload: {
+      content: `\`${target.relativePath}\` is too large for Discord (${formatBytes(fileStats.size)}).\n${url}`,
+    },
+    deliveryKind: "tmpfiles",
   };
 }
 
