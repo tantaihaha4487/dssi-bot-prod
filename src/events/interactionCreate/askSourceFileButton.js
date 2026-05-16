@@ -7,10 +7,10 @@ const {
   getDataFileTarget,
 } = require("../../utils/data-file-delivery");
 const {
-  createAskSourceFileModal,
+  createAskSourceFileSelectRow,
   getAskSourceFileRequest,
   parseAskSourceFileButtonId,
-  parseAskSourceFileModalId,
+  parseAskSourceFileSelectId,
   resolveAskSourceSelection,
 } = require("../../utils/ask-source-file");
 
@@ -20,8 +20,8 @@ module.exports = async (interaction) => {
     return;
   }
 
-  if (interaction.isModalSubmit()) {
-    await handleModalSubmitInteraction(interaction);
+  if (interaction.isStringSelectMenu()) {
+    await handleSelectInteraction(interaction);
   }
 };
 
@@ -39,8 +39,8 @@ async function handleButtonInteraction(interaction) {
     return;
   }
 
-  const modal = createAskSourceFileModal(sourceFileId);
-  if (!modal) {
+  const components = createAskSourceFileSelectRow(request);
+  if (!components) {
     await interaction.reply({
       content: "This source file button has expired. Ask again if you need a fresh file link.",
       flags: MessageFlags.Ephemeral,
@@ -48,11 +48,15 @@ async function handleButtonInteraction(interaction) {
     return;
   }
 
-  await interaction.showModal(modal);
+  await interaction.reply({
+    content: createPickerMessage(request.sources.length),
+    components: [components],
+    flags: MessageFlags.Ephemeral,
+  });
 }
 
-async function handleModalSubmitInteraction(interaction) {
-  const sourceFileId = parseAskSourceFileModalId(interaction.customId);
+async function handleSelectInteraction(interaction) {
+  const sourceFileId = parseAskSourceFileSelectId(interaction.customId);
   if (!sourceFileId) return;
 
   const request = getAskSourceFileRequest(sourceFileId);
@@ -65,12 +69,12 @@ async function handleModalSubmitInteraction(interaction) {
     return;
   }
 
-  const selection = interaction.fields.getTextInputValue("sourceSelection");
+  const selection = interaction.values[0];
   const source = resolveAskSourceSelection(request, selection);
 
   if (!source) {
     await interaction.reply({
-      content: createInvalidSelectionMessage(request),
+      content: "This source selection is no longer available. Open the picker again.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -99,29 +103,12 @@ async function handleModalSubmitInteraction(interaction) {
   }
 }
 
-function createInvalidSelectionMessage(request) {
-  const previewSources = request.sources.slice(0, 25);
-  const preview = previewSources
-    .map((source, index) => `${index + 1}. ${truncateSelectionLabel(source.label)}`)
-    .join("\n");
-  const suffix = request.sources.length > previewSources.length
-    ? `\n...and ${request.sources.length - previewSources.length} more`
-    : "";
+function createPickerMessage(totalSources) {
+  if (totalSources > 25) {
+    return `Pick a source file from the first 25 of ${totalSources} results.`;
+  }
 
-  return truncateMessage([
-    "Keep the list and add `pick: 1` or `pick: path/to/file` on the last line.",
-    `${preview}${suffix}`,
-  ].join("\n\n"));
-}
-
-function truncateSelectionLabel(label) {
-  return truncateMessage(label, 120);
-}
-
-function truncateMessage(message, maxLength = 1900) {
-  if (message.length <= maxLength) return message;
-
-  return `${message.slice(0, maxLength - 1)}…`;
+  return `Pick a source file from ${totalSources} result${totalSources === 1 ? "" : "s"}.`;
 }
 
 function createErrorEmbed(error) {
@@ -133,7 +120,5 @@ function createErrorEmbed(error) {
 }
 
 module.exports._test = {
-  createInvalidSelectionMessage,
-  truncateMessage,
-  truncateSelectionLabel,
+  createPickerMessage,
 };

@@ -14,7 +14,7 @@ Mention the bot to ask the knowledge base:
 @bot What is this program about?
 ```
 
-The bot replies with an answer and source filenames when available. When `commands.ask.topSourceButton` is enabled, the first answer message also includes a button that opens a modal so anyone can choose a related source file as an ephemeral attachment or tmpfiles link.
+The bot replies with an answer and source filenames when available. When `commands.ask.topSourceButton` is enabled, the first answer message also includes a button that opens a pick list so anyone can choose a related source file as an ephemeral attachment or tmpfiles link.
 
 ## Slash Commands
 

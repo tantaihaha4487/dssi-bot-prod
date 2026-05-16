@@ -5,10 +5,10 @@ const path = require("node:path");
 
 const { dataDir } = require("../src/rag/data-loader");
 const {
+  createAskSourceFileSelectRow,
   createAskSourceFileRequest,
   _test,
 } = require("../src/utils/ask-source-file");
-const { _test: handlerTest } = require("../src/events/interactionCreate/askSourceFileButton");
 
 test("createAskSourceFileRequest resolves and deduplicates sources", async () => {
   const testDir = path.join(dataDir, "_test_ask_source_file");
@@ -49,46 +49,52 @@ test("source selection helpers resolve numbers and paths", () => {
     sources: [
       { label: "one.txt", relativePath: "one.txt" },
       { label: "nested/two.txt", relativePath: "nested/two.txt" },
-      { label: "2024/report.pdf", relativePath: "2024/report.pdf" },
     ],
   };
 
   assert.equal(_test.parseSelectionNumber("2"), 2);
-  assert.equal(_test.parseSelectionNumber("2. nested/two.txt"), null);
-  assert.equal(_test.parsePickedSelection("pick: 2"), "2");
-  assert.equal(_test.resolveAskSourceSelection(request, "pick: 2").relativePath, "nested/two.txt");
-  assert.equal(
-    _test.resolveAskSourceSelection(request, "pick: nested/two.txt").relativePath,
-    "nested/two.txt",
-  );
-  assert.equal(
-    _test.resolveAskSourceSelection(request, "pick: 2024/report.pdf").relativePath,
-    "2024/report.pdf",
-  );
-  assert.equal(_test.resolveAskSourceSelection(request, "nested/two.txt"), null);
+  assert.equal(_test.resolveAskSourceSelection(request, "2").relativePath, "nested/two.txt");
+  assert.equal(_test.resolveAskSourceSelection(request, "nested/two.txt").relativePath, "nested/two.txt");
   assert.equal(_test.resolveAskSourceSelection(request, "unknown"), null);
 });
 
-test("createSourceSelectionPrompt lists source options", () => {
-  const prompt = _test.createSourceSelectionPrompt([
-    { label: "one.txt", relativePath: "one.txt" },
-    { label: "nested/two.txt", relativePath: "nested/two.txt" },
-  ]);
+test("createAskSourceFileSelectRow lists up to 25 options", async () => {
+  const testDir = path.join(dataDir, "_test_ask_source_picker");
+  await mkdir(testDir, { recursive: true });
 
-  assert.match(prompt, /1\. one\.txt/);
-  assert.match(prompt, /2\. nested\/two\.txt/);
+  const sources = Array.from({ length: 26 }, (_, index) => {
+    const relativePath = `_test_ask_source_picker/${index + 1}-very-long-file-name-${"x".repeat(90)}.txt`;
+    return {
+      label: relativePath,
+      relativePath,
+    };
+  });
+
+  try {
+    await Promise.all(
+      sources.map(({ relativePath }) => writeFile(path.join(dataDir, relativePath), "x")),
+    );
+
+    const request = await createAskSourceFileRequest(sources.map(({ relativePath }) => relativePath));
+
+    assert.ok(request);
+
+    const row = createAskSourceFileSelectRow(request);
+    assert.ok(row);
+
+    const options = row.toJSON().components[0].options;
+
+    assert.equal(options.length, 25);
+    assert.ok(options.every((option) => option.label.length <= 100));
+    assert.equal(options[0].value, "1");
+    assert.equal(options[24].value, "25");
+  } finally {
+    await rm(testDir, { recursive: true, force: true });
+  }
 });
 
-test("invalid selection message is capped below Discord content limits", () => {
-  const request = {
-    sources: Array.from({ length: 25 }, (_, index) => ({
-      label: `${String(index + 1).padStart(2, "0")}/`.repeat(80) + `file-${index}.txt`,
-      relativePath: `${index + 1}/file-${index}.txt`,
-    })),
-  };
-
-  const message = handlerTest.createInvalidSelectionMessage(request);
-
-  assert.ok(message.length < 2000);
-  assert.match(message, /pick: 1/);
+test("source selection placeholder reflects the number of results", () => {
+  assert.equal(_test.createSourceSelectionPlaceholder(1), "Pick 1-1 source");
+  assert.equal(_test.createSourceSelectionPlaceholder(3), "Pick 1-3 sources");
+  assert.equal(_test.createSourceSelectionPlaceholder(26), "Pick 1-25 of 26 sources");
 });

@@ -139,7 +139,7 @@ Public by default:
 
 - Mention questions, for example `@bot what is DSSI?`.
   Mention request queue/progress updates are shown through a public status button; pressing it returns an ephemeral status visible only to the requesting user.
-  When `commands.ask.topSourceButton` is enabled, answers can also include a public source-file chooser button; pressing it opens a modal so the clicking user can choose a related source file ephemerally.
+  When `commands.ask.topSourceButton` is enabled, answers can also include a public source-file chooser button; pressing it opens a pick list so the clicking user can choose a related source file ephemerally.
 - `/ping`.
 - `/view`, unless `commands.view.allowEveryone` is set to `false`.
 
