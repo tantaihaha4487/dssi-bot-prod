@@ -44,7 +44,7 @@ commands:
 
 `commands.ask.topSourceButton` controls mention-based ask replies:
 
-- `true`: when an answer has a resolvable source file, add a button that lets anyone request the top source file as an ephemeral reply.
+- `true`: when an answer has one or more resolvable source files, add a button that opens a modal so anyone can choose a related source file as an ephemeral reply.
 - `false`: show only the text answer and source list.
 
 `commands.view.allowEveryone` controls `/view`:

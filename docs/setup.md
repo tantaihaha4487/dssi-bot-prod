@@ -69,7 +69,7 @@ commands:
     allowEveryone: true
 ```
 
-Mention-based questions and `/ping` are public. Mention answers include a public source-file button while `commands.ask.topSourceButton` is `true`; clicking it returns the top source file ephemerally to the clicking user. `/view` is also public while `commands.view.allowEveryone` is `true`. Set it to `false` if file viewing should require `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS`.
+Mention-based questions and `/ping` are public. Mention answers include a public source-file button while `commands.ask.topSourceButton` is `true`; clicking it opens a modal so the clicking user can choose a related source file ephemerally. `/view` is also public while `commands.view.allowEveryone` is `true`. Set it to `false` if file viewing should require `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS`.
 
 Mention ask queue/progress notices use a public status button. Pressing the button creates an interaction, so the bot can return an ephemeral status visible only to the requesting user.
 
