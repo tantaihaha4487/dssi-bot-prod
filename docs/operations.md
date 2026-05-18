@@ -14,7 +14,7 @@ Mention the bot to ask the knowledge base:
 @bot What is this program about?
 ```
 
-The bot replies with an answer and source filenames when available.
+The bot replies with an answer and source filenames when available. When `commands.ask.topSourceButton` is enabled, the first answer message also includes a button that opens a pick list so anyone can choose a related source file as an ephemeral attachment or tmpfiles link.
 
 ## Slash Commands
 
@@ -37,7 +37,7 @@ Admin commands require `DISCORD_ADMIN_USER_IDS` or `DISCORD_MODERATOR_ROLE_IDS` 
 1. Add or upload knowledge files.
 2. Run `/refresh` if files changed outside `/upload`.
 3. Ask by mentioning the bot.
-4. Use `/view` when you need to send a source file back to Discord.
+4. Use the source-file chooser button or `/view` when you need to send a source file back to Discord.
 5. Edit `config.yaml` when tuning providers, command access, or retrieval.
 6. Run `/reload`.
 7. Run `/refresh` if the config change affects indexing.
@@ -63,7 +63,7 @@ Run `/refresh` after changing:
 
 You do not need `/refresh` after changing chat model fallback order unless you also changed indexing settings.
 
-You do not need `/refresh` after changing `commands.view.allowEveryone`; run `/reload` instead.
+You do not need `/refresh` after changing `commands.ask.topSourceButton` or `commands.view.allowEveryone`; run `/reload` instead.
 
 ## Reload Rules
 
