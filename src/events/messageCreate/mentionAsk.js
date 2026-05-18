@@ -1,4 +1,9 @@
-const { createAskErrorEmbed, getAskResponseEmbeds } = require("../../utils/ask-response");
+const { getAskCommandConfig } = require("../../rag/config");
+const { createAskErrorEmbed, getAskResponse } = require("../../utils/ask-response");
+const {
+  createAskSourceFileButtonRow,
+  createAskSourceFileRequest,
+} = require("../../utils/ask-source-file");
 const { MentionAskQueue } = require("../../utils/mention-ask-queue");
 const {
   createMentionAskStatus,
@@ -47,11 +52,21 @@ module.exports = async (message) => {
 };
 
 async function respondToMentionAsk(message, question, statusId, statusPrompt, context) {
-  const embeds = await getAskResponseEmbeds(question);
+  const response = await getAskResponse(question);
+  const sourceFileRequest = getAskCommandConfig().topSourceButton
+    ? await createAskSourceFileRequest(response.sources)
+    : null;
 
   stopTypingIndicator(context.typingInterval);
-  const [firstEmbed, ...restEmbeds] = embeds;
-  await sendMessageFeedback(message, { embeds: [firstEmbed] });
+  const [firstEmbed, ...restEmbeds] = response.embeds;
+  const components = sourceFileRequest
+    ? [createAskSourceFileButtonRow(sourceFileRequest.id)]
+    : undefined;
+  const reply = { embeds: [firstEmbed] };
+
+  if (components) reply.components = components;
+
+  await sendMessageFeedback(message, reply);
 
   for (const embed of restEmbeds) {
     await message.channel.send({ embeds: [embed] });

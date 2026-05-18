@@ -72,9 +72,13 @@ Edit `config.yaml` for command-specific access:
 
 ```yaml
 commands:
+  ask:
+    topSourceButton: true
   view:
     allowEveryone: true
 ```
+
+Mention answers can include a source-file chooser button by default. Set `commands.ask.topSourceButton: false` to disable it.
 
 `/view` is public by default. Set `commands.view.allowEveryone: false` to restrict it to the same admin users and moderator roles.
 
@@ -135,6 +139,7 @@ Public by default:
 
 - Mention questions, for example `@bot what is DSSI?`.
   Mention request queue/progress updates are shown through a public status button; pressing it returns an ephemeral status visible only to the requesting user.
+  When `commands.ask.topSourceButton` is enabled, answers can also include a public source-file chooser button; pressing it opens a pick list so the clicking user can choose a related source file ephemerally.
 - `/ping`.
 - `/view`, unless `commands.view.allowEveryone` is set to `false`.
 

@@ -67,6 +67,8 @@ Behavior:
 
 `/view` sends an existing knowledge file from `data/` back into Discord.
 
+Mention-based answers can also include a source-file button when `commands.ask.topSourceButton` is `true`. Anyone can click that button, open a pick list, and choose a related source file. The selected file is sent only to the clicking user as an ephemeral Discord reply. Files too large for Discord are uploaded to tmpfiles and returned as an ephemeral link.
+
 Behavior:
 
 - The file option autocompletes matching paths under `data/`.
