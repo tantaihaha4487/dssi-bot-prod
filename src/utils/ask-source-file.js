@@ -24,6 +24,7 @@ async function createAskSourceFileRequest(sources) {
     sources: resolvedSources,
     createdAt: Date.now(),
     cachedTmpfilesPayloads: new Map(),
+    pendingTmpfilesPayloads: new Map(),
   };
 
   sourceFiles.set(id, request);

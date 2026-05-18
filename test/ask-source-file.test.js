@@ -9,6 +9,9 @@ const {
   createAskSourceFileRequest,
   _test,
 } = require("../src/utils/ask-source-file");
+const {
+  _test: askSourceFileButtonTest,
+} = require("../src/events/interactionCreate/askSourceFileButton");
 
 test("createAskSourceFileRequest resolves and deduplicates sources", async () => {
   const testDir = path.join(dataDir, "_test_ask_source_file");
@@ -97,4 +100,59 @@ test("source selection placeholder reflects the number of results", () => {
   assert.equal(_test.createSourceSelectionPlaceholder(1), "Pick 1-1 source");
   assert.equal(_test.createSourceSelectionPlaceholder(3), "Pick 1-3 sources");
   assert.equal(_test.createSourceSelectionPlaceholder(26), "Pick 1-25 of 26 sources");
+});
+
+test("getSourceReply reuses the same in-flight tmpfiles upload", async () => {
+  const payload = { content: "https://tmpfiles.org/example" };
+  const request = {
+    cachedTmpfilesPayloads: new Map(),
+    pendingTmpfilesPayloads: new Map(),
+  };
+
+  let callCount = 0;
+  let resolveReply;
+  const replyPromise = new Promise((resolve) => {
+    resolveReply = resolve;
+  });
+
+  const loadReply = () => {
+    callCount += 1;
+    return replyPromise;
+  };
+
+  const first = askSourceFileButtonTest.getSourceReply(
+    request,
+    "nested/file.txt",
+    123,
+    loadReply,
+  );
+  const second = askSourceFileButtonTest.getSourceReply(
+    request,
+    "nested/file.txt",
+    123,
+    loadReply,
+  );
+
+  assert.equal(callCount, 1);
+  assert.equal(request.pendingTmpfilesPayloads.size, 1);
+
+  resolveReply({ payload, deliveryKind: "tmpfiles" });
+
+  const [firstReply, secondReply] = await Promise.all([first, second]);
+
+  assert.equal(firstReply.payload, payload);
+  assert.equal(secondReply.payload, payload);
+  assert.equal(request.pendingTmpfilesPayloads.size, 0);
+  assert.equal(request.cachedTmpfilesPayloads.get("nested/file.txt"), payload);
+
+  const cachedReply = await askSourceFileButtonTest.getSourceReply(
+    request,
+    "nested/file.txt",
+    123,
+    () => {
+      throw new Error("should not reload cached tmpfiles payload");
+    },
+  );
+
+  assert.equal(cachedReply.payload, payload);
 });

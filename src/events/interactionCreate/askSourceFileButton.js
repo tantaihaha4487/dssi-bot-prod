@@ -83,24 +83,51 @@ async function handleSelectInteraction(interaction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
-    if (request.cachedTmpfilesPayloads.has(source.relativePath)) {
-      await interaction.editReply(request.cachedTmpfilesPayloads.get(source.relativePath));
-      return;
-    }
-
-    const target = await getDataFileTarget(source.relativePath);
-    const reply = await createDataFileReply(target, interaction.attachmentSizeLimit);
-
-    if (reply.deliveryKind === "tmpfiles") {
-      request.cachedTmpfilesPayloads.set(source.relativePath, reply.payload);
-    }
-
+    const reply = await getSourceReply(request, source.relativePath, interaction.attachmentSizeLimit);
     await interaction.editReply(reply.payload);
   } catch (error) {
     console.error("Error sending ask source file:", error);
 
     await interaction.editReply({ embeds: [createErrorEmbed(error)] });
   }
+}
+
+async function getSourceReply(
+  request,
+  relativePath,
+  attachmentSizeLimit,
+  loadReply = createSourceReply,
+) {
+  if (request.cachedTmpfilesPayloads.has(relativePath)) {
+    return {
+      payload: request.cachedTmpfilesPayloads.get(relativePath),
+      deliveryKind: "tmpfiles",
+    };
+  }
+
+  if (request.pendingTmpfilesPayloads.has(relativePath)) {
+    return request.pendingTmpfilesPayloads.get(relativePath);
+  }
+
+  const replyPromise = loadReply(relativePath, attachmentSizeLimit);
+  request.pendingTmpfilesPayloads.set(relativePath, replyPromise);
+
+  try {
+    const reply = await replyPromise;
+
+    if (reply.deliveryKind === "tmpfiles") {
+      request.cachedTmpfilesPayloads.set(relativePath, reply.payload);
+    }
+
+    return reply;
+  } finally {
+    request.pendingTmpfilesPayloads.delete(relativePath);
+  }
+}
+
+async function createSourceReply(relativePath, attachmentSizeLimit) {
+  const target = await getDataFileTarget(relativePath);
+  return createDataFileReply(target, attachmentSizeLimit);
 }
 
 function createPickerMessage(totalSources) {
@@ -121,4 +148,5 @@ function createErrorEmbed(error) {
 
 module.exports._test = {
   createPickerMessage,
+  getSourceReply,
 };
